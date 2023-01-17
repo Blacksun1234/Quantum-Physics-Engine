@@ -67,7 +67,18 @@ QmParticle* createParticle()
 {
 	glm::vec3 pos = randomVector(-5, 5);
 	GxParticle* g = new GxParticle(randomVector(1, 0), 0.1f + 0.2f*((rand() % 100) / 100.f), pos);
-	QmParticle* p = new QmParticle(pos, randomVector(0, 0), randomVector(0, 0));
+	QmParticle* p = new QmParticle(pos, randomVector(0, 0), randomVector(-1, 1));
+	p->setUpdater(new GxUpdater(g));
+	gxWorld.addParticle(g);
+	pxWorld.addBody(p);
+	return p;
+}
+
+QmParticle* createParticleFromCursor()
+{
+	glm::vec3 pos = *mousePointer;
+	GxParticle* g = new GxParticle(randomVector(1, 0), 0.1f + 0.2f * ((rand() % 100) / 100.f), pos);
+	QmParticle* p = new QmParticle(pos, randomVector(0, 0), randomVector(-1, 1));
 	p->setUpdater(new GxUpdater(g));
 	gxWorld.addParticle(g);
 	pxWorld.addBody(p);
@@ -79,14 +90,12 @@ void initScene1()
 	printf("Scene 1: Random particles.\n");
 	printf("Type space to pause.\n");
 	mousePointer = new glm::vec3(0, 4.5, 0);
-	for (int i = 0; i < 100; i++)
-		createParticle();
 }
 
 void initScene2()
 {
 	printf("Scene 2.\n");
-	printf("Empty.\n");
+	mousePointer = new glm::vec3(0, 4.5, 0);
 }
 
 // ***************************** GLUT methods
@@ -154,6 +163,10 @@ void idleFunc()
 
 	calculateFPS(dt);
 	if (!paused) pxWorld.simulate(dt);
+
+	if (buttons == 3) {
+			createParticleFromCursor();
+	}
 
 	glutPostRedisplay();
 }

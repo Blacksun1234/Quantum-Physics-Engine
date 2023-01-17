@@ -19,9 +19,11 @@ QmWorld::~QmWorld()
 
 void QmWorld::simulate(float t)
 {
+	clear(); // clear of particules to set acc  to 0
+	applyGravity(); //apply gravity to all bodies vector
+	updateForces(); // update forces to each iteration
 	integrate(t);
 }
-
 
 void QmWorld::integrate(float t)
 {
@@ -30,9 +32,21 @@ void QmWorld::integrate(float t)
 		b->integrate(t);
 }
 
+void QmWorld::applyGravity() {
+
+}
+
+void QmWorld::updateForces() {
+
+}
+
 void QmWorld::addBody(QmBody* b)
 {
 	bodies.push_back(b);
+}
+
+void QmWorld::addForceRegistery(QmForceRegistery* f) {
+	
 }
 
 std::vector<QmBody*> QmWorld::getBodies()

@@ -11,7 +11,7 @@ namespace Quantum {
 	class QmParticle : public QmBody {
 	public:
 		QmParticle();
-		QmParticle(glm::vec3, glm::vec3, glm::vec3);
+		QmParticle(glm::vec3, glm::vec3, glm::vec3, float);
 		~QmParticle();
 		virtual void integrate(float);
 		
@@ -20,13 +20,16 @@ namespace Quantum {
 		glm::vec3 getPos();
 
 		void setUpdater(QmUpdater* updater);
-
+		void addForce(glm::vec3);
+		void clearParticle();
 
 	private:
 		QmUpdater* updater;
 		glm::vec3 position;
 		glm::vec3 velocity;
 		glm::vec3 acceleration;
+		glm::vec3 forceAccumulator;
+		float invMass;
 
 		float damping;
 

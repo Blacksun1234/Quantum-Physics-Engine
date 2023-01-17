@@ -12,6 +12,7 @@ namespace Quantum {
 	class QmBody {
 	public:
 		virtual void integrate(float) {};
+		virtual void clearParticle() {};
 		int getType() const { return type; }
 
 	protected:

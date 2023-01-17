@@ -7,6 +7,7 @@
 namespace Quantum {
 
 	class QmBody;
+	class QmForceRegistery;
 
 	class QmWorld {
 	public:
@@ -21,6 +22,9 @@ namespace Quantum {
 		float time;
 		std::vector<QmBody*> bodies;
 		void integrate(float);
+		void applyGravity();
+		void updateForces();
+		void addForceRegistery(QmForceRegistery* f);
 	};
 
 }
