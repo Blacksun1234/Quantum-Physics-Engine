@@ -3,6 +3,8 @@
 
 #include "QmWorld.h"
 #include "QmParticle.h"
+#include "QmForceRegistery.h"
+#include "QmForceGenerator.h"
 
 using namespace Quantum;
 
@@ -10,6 +12,8 @@ QmWorld::QmWorld()
 {
 	std::cout << "Starting Quantum Physics engine." << std::endl;
 	time = 0.f;
+	//isGravityActive = true;
+	gravity = glm::vec3(0, -9.81, 0);
 }
 
 QmWorld::~QmWorld()
@@ -17,9 +21,13 @@ QmWorld::~QmWorld()
 
 }
 
+void QmWorld::SetGravity(bool _isGravityActive) {
+	isGravityActive = _isGravityActive;
+}
+
 void QmWorld::simulate(float t)
 {
-	clear(); // clear of particules to set acc  to 0
+	clear(); // clear of particules to set acc to 0
 	applyGravity(); //apply gravity to all bodies vector
 	updateForces(); // update forces to each iteration
 	integrate(t);
@@ -33,11 +41,17 @@ void QmWorld::integrate(float t)
 }
 
 void QmWorld::applyGravity() {
-
+	if (isGravityActive) {
+		for (QmBody* b : bodies) {
+			b->SetAcc(gravity);
+		}	
+	}
 }
 
 void QmWorld::updateForces() {
-
+	for (QmForceRegistery*  fr: forcesRegistries) {
+		fr->fg->update(fr->p);
+	}
 }
 
 void QmWorld::addBody(QmBody* b)
@@ -46,7 +60,7 @@ void QmWorld::addBody(QmBody* b)
 }
 
 void QmWorld::addForceRegistery(QmForceRegistery* f) {
-	
+	forcesRegistries.push_back(f);
 }
 
 std::vector<QmBody*> QmWorld::getBodies()
@@ -59,8 +73,7 @@ void QmWorld::clear()
 
 	for (QmBody* b : bodies)
 	{
-		delete b;
+		b->clearParticle();
 	}
-	bodies.clear();
 }
 

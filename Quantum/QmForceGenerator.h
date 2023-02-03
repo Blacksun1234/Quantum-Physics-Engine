@@ -1,10 +1,11 @@
 namespace Quantum {
 
-	class QmParticule;
+	class QmParticle;
 
 	class QmForceGenerator
 	{
-		virtual void update(QmParticule* p) {};
+	public:
+		virtual void update(QmParticle* p) {};
 	};
 }
 

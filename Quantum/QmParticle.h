@@ -13,11 +13,13 @@ namespace Quantum {
 		QmParticle();
 		QmParticle(glm::vec3, glm::vec3, glm::vec3, float);
 		~QmParticle();
-		virtual void integrate(float);
+		void integrate(float);
 		
 		glm::vec3 getAcc();
 		glm::vec3 getVel();
 		glm::vec3 getPos();
+
+		void SetAcc(glm::vec3 acc);
 
 		void setUpdater(QmUpdater* updater);
 		void addForce(glm::vec3);

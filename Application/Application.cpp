@@ -15,6 +15,9 @@
 #include "GxWorld.h"
 #include "GxParticle.h"
 #include "GxUpdater.h"
+#include "QmForceRegistery.h"
+#include "QmDrag.h"
+#include "QmMagnetism.h"
 
 using namespace std;
 using namespace Quantum;
@@ -22,6 +25,8 @@ using namespace Quantum;
 
 GxWorld gxWorld;
 QmWorld pxWorld;
+
+bool Boolean_garvity = true;
 
 glm::vec3* mousePointer;
 
@@ -65,23 +70,40 @@ glm::vec3 randomVector(float min, float max)
 
 QmParticle* createParticle()
 {
-	glm::vec3 pos = randomVector(-5, 5);
-	GxParticle* g = new GxParticle(randomVector(1, 0), 0.1f + 0.2f*((rand() % 100) / 100.f), pos);
-	QmParticle* p = new QmParticle(pos, randomVector(0, 0), randomVector(-1, 1));
-	p->setUpdater(new GxUpdater(g));
-	gxWorld.addParticle(g);
-	pxWorld.addBody(p);
-	return p;
+	for (int i = 0; i < 50; i++) {
+
+		glm::vec3 pos = randomVector(-5, 5);
+		GxParticle* g = new GxParticle(randomVector(1, 0), 0.1f + 0.2f*((rand() % 100) / 100.f), pos);
+		QmParticle* p = new QmParticle(pos, randomVector(0, 0), randomVector(-1, 1),3);
+		p->setUpdater(new GxUpdater(g));
+		gxWorld.addParticle(g);
+		pxWorld.addBody(p);
+
+		//add particules and link them in the forceRegistery in both ways
+
+		for (QmBody* b : pxWorld.bodies) {
+			if (b != p) {
+				QmForceRegistery* f = new QmForceRegistery(p, new QmMagnetism(1, 2));
+				pxWorld.addForceRegistery(f);
+			}
+		}
+
+		return p;
+	}
+	
 }
 
 QmParticle* createParticleFromCursor()
 {
 	glm::vec3 pos = *mousePointer;
 	GxParticle* g = new GxParticle(randomVector(1, 0), 0.1f + 0.2f * ((rand() % 100) / 100.f), pos);
-	QmParticle* p = new QmParticle(pos, randomVector(0, 0), randomVector(-1, 1));
+	QmParticle* p = new QmParticle(pos, randomVector(1, 10), randomVector(0, 0), 3);
+	QmForceRegistery* f = new QmForceRegistery(p, new QmDrag(1,2));
 	p->setUpdater(new GxUpdater(g));
 	gxWorld.addParticle(g);
 	pxWorld.addBody(p);
+	pxWorld.addForceRegistery(f);
+	
 	return p;
 }
 
@@ -96,6 +118,7 @@ void initScene2()
 {
 	printf("Scene 2.\n");
 	mousePointer = new glm::vec3(0, 4.5, 0);
+	// wrigth function to create some partcules (50) and link them in the forceRegistery in both ways
 }
 
 // ***************************** GLUT methods
@@ -264,14 +287,28 @@ void keyFunc(unsigned char key, int x, int y)
 		exit(0);
 		break;
 	case '1':
+		Boolean_garvity = true;
 		toggleScene(1);
 		break;
 	case '2':
+		Boolean_garvity = false;
 		toggleScene(2);
 		break;
 	case ' ':
 		paused = !paused;
 		break;
+	case 'g':
+		cout << Boolean_garvity << endl;
+		if (Boolean_garvity) {
+			Boolean_garvity = false;
+			pxWorld.SetGravity(Boolean_garvity);
+			cout << "Gravity off " << Boolean_garvity << endl;
+		}
+		else {
+			Boolean_garvity = true;
+			cout << "Gravity on " << Boolean_garvity << endl;
+			pxWorld.SetGravity(Boolean_garvity);
+		}
 	default:
 		break;
 	}

@@ -1,13 +1,14 @@
 
 namespace Quantum {
 
-	class QmParticule;
+	class QmParticle;
 	class QmForceGenerator;
 
 	class QmForceRegistery
 	{
-	private:
-		QmParticule* p;
+	public:
+		QmForceRegistery(QmParticle* _p, QmForceGenerator* _fg);
+		QmParticle* p;
 		QmForceGenerator* fg;
 	};
 }

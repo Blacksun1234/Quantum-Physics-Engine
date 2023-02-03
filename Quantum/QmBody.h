@@ -14,6 +14,7 @@ namespace Quantum {
 		virtual void integrate(float) {};
 		virtual void clearParticle() {};
 		int getType() const { return type; }
+		virtual void SetAcc(glm::vec3 acc) {};
 
 	protected:
 		int type;

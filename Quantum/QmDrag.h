@@ -6,9 +6,10 @@ namespace Quantum {
     class QmParticle;
 
     class QmDrag :
-        public QmForceGenerator
+        virtual public QmForceGenerator
     {
     public:
+        QmDrag(float K1, float K2);
         void update(QmParticle* p);
 
     private:

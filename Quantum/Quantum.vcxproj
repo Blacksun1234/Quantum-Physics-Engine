@@ -84,6 +84,7 @@
     <ClInclude Include="QmDrag.h" />
     <ClInclude Include="QmForceGenerator.h" />
     <ClInclude Include="QmForceRegistery.h" />
+    <ClInclude Include="QmMagnetism.h" />
     <ClInclude Include="QmUpdater.h" />
     <ClInclude Include="QmParticle.h" />
     <ClInclude Include="Quantum.h" />
@@ -94,8 +95,8 @@
   <ItemGroup>
     <ClCompile Include="QmBody.cpp" />
     <ClCompile Include="QmDrag.cpp" />
-    <ClCompile Include="QmForceGenerator.cpp" />
     <ClCompile Include="QmForceRegistery.cpp" />
+    <ClCompile Include="QmMagnetism.cpp" />
     <ClCompile Include="QmParticle.cpp" />
     <ClCompile Include="stdafx.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
