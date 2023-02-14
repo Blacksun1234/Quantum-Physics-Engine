@@ -11,13 +11,14 @@ namespace Quantum {
 	class QmParticle : public QmBody {
 	public:
 		QmParticle();
-		QmParticle(glm::vec3, glm::vec3, glm::vec3, float);
+		QmParticle(glm::vec3, glm::vec3, glm::vec3, float, float);
 		~QmParticle();
 		void integrate(float);
 		
 		glm::vec3 getAcc();
 		glm::vec3 getVel();
 		glm::vec3 getPos();
+		float getCharge();
 
 		void SetAcc(glm::vec3 acc);
 
@@ -34,7 +35,7 @@ namespace Quantum {
 		float invMass;
 
 		float damping;
-
+		float _charge;
 	};
 
 }

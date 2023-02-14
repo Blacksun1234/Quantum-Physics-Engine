@@ -21,8 +21,8 @@ QmWorld::~QmWorld()
 
 }
 
-void QmWorld::SetGravity(bool _isGravityActive) {
-	isGravityActive = _isGravityActive;
+void QmWorld::SetGravity(bool isGravityActive) {
+	_isGravityActive = isGravityActive;
 }
 
 void QmWorld::simulate(float t)
@@ -41,7 +41,7 @@ void QmWorld::integrate(float t)
 }
 
 void QmWorld::applyGravity() {
-	if (isGravityActive) {
+	if (_isGravityActive) {
 		for (QmBody* b : bodies) {
 			b->SetAcc(gravity);
 		}	
@@ -75,5 +75,18 @@ void QmWorld::clear()
 	{
 		b->clearParticle();
 	}
+}
+
+void QmWorld::clearScene() {
+	for (QmBody* b : bodies)
+	{
+		delete b;
+	}
+	for (QmForceRegistery* f : forcesRegistries)
+	{
+		delete f;
+	}
+	bodies.clear();
+	forcesRegistries.clear();
 }
 

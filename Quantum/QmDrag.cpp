@@ -1,7 +1,7 @@
 #include "stdafx.h"
 #include "QmDrag.h"
 #include <glm/geometric.hpp>
-#include "QmParticle.h"
+
 
 Quantum::QmDrag::QmDrag(float _K1, float _K2) {
 	K1 = _K1;

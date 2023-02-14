@@ -1,3 +1,6 @@
+#pragma once
+#include "QmParticle.h"
+
 namespace Quantum {
 
 	class QmParticle;

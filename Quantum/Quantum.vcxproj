@@ -82,6 +82,7 @@
   <ItemGroup>
     <ClInclude Include="QmBody.h" />
     <ClInclude Include="QmDrag.h" />
+    <ClInclude Include="QmFixedMagnetism.h" />
     <ClInclude Include="QmForceGenerator.h" />
     <ClInclude Include="QmForceRegistery.h" />
     <ClInclude Include="QmMagnetism.h" />
@@ -95,6 +96,7 @@
   <ItemGroup>
     <ClCompile Include="QmBody.cpp" />
     <ClCompile Include="QmDrag.cpp" />
+    <ClCompile Include="QmFixedMagnetism.cpp" />
     <ClCompile Include="QmForceRegistery.cpp" />
     <ClCompile Include="QmMagnetism.cpp" />
     <ClCompile Include="QmParticle.cpp" />

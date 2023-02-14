@@ -3,19 +3,16 @@
 
 namespace Quantum {
 
-    class QmParticle;
-
-    class QmMagnetism :
+    class QmFixedMagnetism :
         virtual public QmForceGenerator
     {
     public:
-        QmMagnetism(float _K, float eps, QmParticle* _otherbody);
+        QmFixedMagnetism(float _K, float eps, glm::vec3 *fixedpos, float *fixedCharge);
         void update(QmParticle* p);
     private:
         float _K;
         float _eps;
-        QmParticle* _otherbody;
+        glm::vec3 *_fixedPos;
+        float* _fixedCharge;
     };
-
 }
-

@@ -11,14 +11,15 @@ QmParticle::QmParticle() : position(0, 0, 0), velocity(0, 0, 0), acceleration(0,
 {
 }
 
-QmParticle::QmParticle(glm::vec3 pos, glm::vec3 vel, glm::vec3 acc, float invMass) : QmParticle()
+QmParticle::QmParticle(glm::vec3 pos, glm::vec3 vel, glm::vec3 acc, float Mass, float charge) : QmParticle()
 {
 	position = pos;
 	velocity = vel;
 	acceleration = acc;
-	invMass = invMass;
-	damping = 1.f;
+	invMass = 1 / Mass;
+	damping = (charge == 0.0f) ? 1.0f : 0.95f;
 	type = TYPE_PARTICLE;
+	_charge = charge;
 }
 
 QmParticle::~QmParticle()
@@ -33,6 +34,7 @@ void QmParticle::integrate(float t)
 	// your code here
 	position = position + t * velocity;
 	velocity = velocity + t * acceleration;
+	velocity *= damping;
 	if (updater != NULL) {
 		updater->update(position);
 	}
@@ -51,6 +53,10 @@ glm::vec3 QmParticle::getVel()
 glm::vec3 QmParticle::getPos()
 {
 	return position;
+}
+
+float QmParticle::getCharge() {
+	return _charge;
 }
 
 void Quantum::QmParticle::SetAcc(glm::vec3 acc)

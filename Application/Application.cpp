@@ -18,6 +18,7 @@
 #include "QmForceRegistery.h"
 #include "QmDrag.h"
 #include "QmMagnetism.h"
+#include "QmFixedMagnetism.h"
 
 using namespace std;
 using namespace Quantum;
@@ -27,6 +28,7 @@ GxWorld gxWorld;
 QmWorld pxWorld;
 
 bool Boolean_garvity = true;
+bool attract = true;
 
 glm::vec3* mousePointer;
 
@@ -58,6 +60,7 @@ GLfloat light_pos[] = { 0.0, 6.0, 1.0, 1.0 };
 
 // ********************************************
 
+float cursormagnetisme = 1000.0f;
 
 glm::vec3 randomVector(float min, float max)
 {
@@ -68,36 +71,56 @@ glm::vec3 randomVector(float min, float max)
 
 }
 
-QmParticle* createParticle()
+QmParticle* createParticlePositive()
 {
-	for (int i = 0; i < 50; i++) {
+	glm::vec3 pos = randomVector(-5, 5);
+	GxParticle* g = new GxParticle(glm::vec3(1,0,0), 0.5f , pos);
+	QmParticle* p = new QmParticle(pos, randomVector(0, 0), randomVector(-1, 1), 3, 10);
+	p->setUpdater(new GxUpdater(g));
+	gxWorld.addParticle(g);
+	pxWorld.addBody(p);
 
-		glm::vec3 pos = randomVector(-5, 5);
-		GxParticle* g = new GxParticle(randomVector(1, 0), 0.1f + 0.2f*((rand() % 100) / 100.f), pos);
-		QmParticle* p = new QmParticle(pos, randomVector(0, 0), randomVector(-1, 1),3);
-		p->setUpdater(new GxUpdater(g));
-		gxWorld.addParticle(g);
-		pxWorld.addBody(p);
+	//add particules and link them in the forceRegistery in both ways
 
-		//add particules and link them in the forceRegistery in both ways
-
-		for (QmBody* b : pxWorld.bodies) {
-			if (b != p) {
-				QmForceRegistery* f = new QmForceRegistery(p, new QmMagnetism(1, 2));
-				pxWorld.addForceRegistery(f);
-			}
+	for (QmBody* b : pxWorld.bodies) {
+		if ((QmParticle*)b != p) {
+			QmForceRegistery* f = new QmForceRegistery(p, new QmMagnetism(10.f, 5.0f,(QmParticle*)b ));
+			pxWorld.addForceRegistery(f);
+			QmForceRegistery* f2 = new QmForceRegistery( (QmParticle*)b, new QmMagnetism(10.f, 5.0f, p ));
+			pxWorld.addForceRegistery(f2); 
 		}
-
-		return p;
 	}
-	
+	return p;
 }
 
-QmParticle* createParticleFromCursor()
+QmParticle* createParticleNegative()
+{
+
+	glm::vec3 pos = randomVector(-5, 5);
+	GxParticle* g = new GxParticle(glm::vec3(0, 0, 1), 0.5f, pos);
+	QmParticle* p = new QmParticle(pos, randomVector(0, 0), randomVector(-1, 1), 3, -10);
+	p->setUpdater(new GxUpdater(g));
+	gxWorld.addParticle(g);
+	pxWorld.addBody(p);
+
+	//add particules and link them in the forceRegistery in both ways
+
+	for (QmBody* b : pxWorld.bodies) {
+		if ((QmParticle*)b != p) {
+			QmForceRegistery* f = new QmForceRegistery(p, new QmMagnetism(10.f, 5.0f, (QmParticle*)b));
+			pxWorld.addForceRegistery(f);
+			QmForceRegistery* f2 = new QmForceRegistery((QmParticle*)b, new QmMagnetism(10.f, 5.0f, p));
+			pxWorld.addForceRegistery(f2);
+		}
+	}
+	return p;
+}
+
+QmParticle* createParticleFromCursorScene1()
 {
 	glm::vec3 pos = *mousePointer;
-	GxParticle* g = new GxParticle(randomVector(1, 0), 0.1f + 0.2f * ((rand() % 100) / 100.f), pos);
-	QmParticle* p = new QmParticle(pos, randomVector(1, 10), randomVector(0, 0), 3);
+	GxParticle* g = new GxParticle(randomVector(1, 0), 0.5f, pos);
+	QmParticle* p = new QmParticle(pos, randomVector(1, 10), randomVector(0, 0), 3, 10);
 	QmForceRegistery* f = new QmForceRegistery(p, new QmDrag(1,2));
 	p->setUpdater(new GxUpdater(g));
 	gxWorld.addParticle(g);
@@ -105,6 +128,26 @@ QmParticle* createParticleFromCursor()
 	pxWorld.addForceRegistery(f);
 	
 	return p;
+}
+
+void createMagnetismeFromCursorScene2()
+{
+	glm::vec3 pos = *mousePointer;
+	
+	if (cursormagnetisme == 1000.f) {
+		for (QmBody* b : pxWorld.bodies) {
+			cursormagnetisme = 0.f;
+			pxWorld.addForceRegistery(new QmForceRegistery((QmParticle*)b, new QmFixedMagnetism(10.f, 5.0f, mousePointer, &cursormagnetisme)));
+		}
+	}
+
+	if (attract) {
+		cursormagnetisme = 500.f;
+	}
+	else {
+		cursormagnetisme = -500.f;
+	}
+
 }
 
 void initScene1()
@@ -118,7 +161,13 @@ void initScene2()
 {
 	printf("Scene 2.\n");
 	mousePointer = new glm::vec3(0, 4.5, 0);
-	// wrigth function to create some partcules (50) and link them in the forceRegistery in both ways
+	cursormagnetisme = 1000.0f;
+	for (int i = 0; i < 100; i++) {
+		createParticlePositive();
+		createParticleNegative();
+	}
+	
+	//add force between cursor and all particules
 }
 
 // ***************************** GLUT methods
@@ -188,7 +237,12 @@ void idleFunc()
 	if (!paused) pxWorld.simulate(dt);
 
 	if (buttons == 3) {
-			createParticleFromCursor();
+		if (scene == 1)
+			createParticleFromCursorScene1();
+		else if (scene == 2) {
+			createMagnetismeFromCursorScene2();
+		}
+			
 	}
 
 	glutPostRedisplay();
@@ -259,7 +313,7 @@ void motionFunc(int x, int y)
 void clearWorld()
 {
 	gxWorld.clear();
-	pxWorld.clear();
+	pxWorld.clearScene();
 
 }
 
@@ -309,6 +363,14 @@ void keyFunc(unsigned char key, int x, int y)
 			cout << "Gravity on " << Boolean_garvity << endl;
 			pxWorld.SetGravity(Boolean_garvity);
 		}
+	case 'f':
+		if (attract) {
+			attract = false;
+		}
+		else {
+			attract = true;
+		}
+		
 	default:
 		break;
 	}
