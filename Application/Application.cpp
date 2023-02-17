@@ -55,6 +55,7 @@ int timeold = 0;
 int frame = 0;
 float accTime = 0.0;
 bool paused = false;
+bool delta = true;
 
 GLfloat light_pos[] = { 0.0, 6.0, 1.0, 1.0 };
 
@@ -75,7 +76,7 @@ QmParticle* createParticlePositive()
 {
 	glm::vec3 pos = randomVector(-5, 5);
 	GxParticle* g = new GxParticle(glm::vec3(1,0,0), 0.5f , pos);
-	QmParticle* p = new QmParticle(pos, randomVector(0, 0), randomVector(-1, 1), 3, 10);
+	QmParticle* p = new QmParticle(pos, randomVector(0, 0), randomVector(0, 0), 3, 1);
 	p->setUpdater(new GxUpdater(g));
 	gxWorld.addParticle(g);
 	pxWorld.addBody(p);
@@ -95,10 +96,9 @@ QmParticle* createParticlePositive()
 
 QmParticle* createParticleNegative()
 {
-
 	glm::vec3 pos = randomVector(-5, 5);
 	GxParticle* g = new GxParticle(glm::vec3(0, 0, 1), 0.5f, pos);
-	QmParticle* p = new QmParticle(pos, randomVector(0, 0), randomVector(-1, 1), 3, -10);
+	QmParticle* p = new QmParticle(pos, randomVector(0, 0), randomVector(0, 0), 3, -1);
 	p->setUpdater(new GxUpdater(g));
 	gxWorld.addParticle(g);
 	pxWorld.addBody(p);
@@ -244,7 +244,6 @@ void idleFunc()
 		}
 			
 	}
-
 	glutPostRedisplay();
 }
 
@@ -370,7 +369,17 @@ void keyFunc(unsigned char key, int x, int y)
 		else {
 			attract = true;
 		}
-		
+	case 'd':
+		if (delta) {
+			delta = false;
+			pxWorld.SetDelta(false);
+			cout << "Delta : " << pxWorld.GetDelta() << endl;
+		}
+		else {
+			delta = true;
+			pxWorld.SetDelta(true);
+			cout << "Delta : " << pxWorld.GetDelta() << endl;
+		}
 	default:
 		break;
 	}

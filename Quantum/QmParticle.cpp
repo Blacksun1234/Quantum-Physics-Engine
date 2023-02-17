@@ -40,6 +40,10 @@ void QmParticle::integrate(float t)
 	}
 }
 
+QmUpdater* QmParticle::GetUpdater() {
+	return updater;
+}
+
 glm::vec3 QmParticle::getAcc()
 {
 	return acceleration;

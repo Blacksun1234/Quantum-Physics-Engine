@@ -21,7 +21,7 @@ namespace Quantum {
 		float getCharge();
 
 		void SetAcc(glm::vec3 acc);
-
+		QmUpdater* QmParticle::GetUpdater();
 		void setUpdater(QmUpdater* updater);
 		void addForce(glm::vec3);
 		void clearParticle();
