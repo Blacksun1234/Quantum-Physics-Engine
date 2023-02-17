@@ -55,7 +55,7 @@ void QmWorld::simulate(float t)
 	_time += t;
 	float dt;
 	bool useDELTA = _delta;
-	float DELTA = 0.01f;
+	float DELTA = 0.1f;
 	dt = _time - _ticktime;
 	if (useDELTA) { // deterministic framerate-independent simulation
 		while (dt >= DELTA) {

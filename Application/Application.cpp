@@ -130,6 +130,20 @@ QmParticle* createParticleFromCursorScene1()
 	return p;
 }
 
+QmParticle* createParticleFromCursorScene3()
+{
+	glm::vec3 pos = randomVector(1,5);
+	GxParticle* g = new GxParticle(randomVector(1, 0), 0.5f, pos);
+	QmParticle* p = new QmParticle(pos, randomVector(1, 10), randomVector(0, 0), 3, 10);
+	QmForceRegistery* f = new QmForceRegistery(p, new QmDrag(1, 2));
+	p->setUpdater(new GxUpdater(g));
+	gxWorld.addParticle(g);
+	pxWorld.addBody(p);
+	pxWorld.addForceRegistery(f);
+
+	return p;
+}
+
 void createMagnetismeFromCursorScene2()
 {
 	glm::vec3 pos = *mousePointer;
@@ -167,7 +181,15 @@ void initScene2()
 		createParticleNegative();
 	}
 	
-	//add force between cursor and all particules
+}
+
+void initScene3() {
+	printf("Scene 3.\n");
+	mousePointer = new glm::vec3(0, 4.5, 0);
+
+	for (int i = 0; i < 10; i++) {
+		createParticleFromCursorScene3();
+	}
 }
 
 // ***************************** GLUT methods
@@ -326,6 +348,7 @@ void toggleScene(int s)
 	{
 	case 1: initScene1(); break;
 	case 2: initScene2(); break;
+	case 3: initScene3(); break;
 	}
 }
 
@@ -346,6 +369,10 @@ void keyFunc(unsigned char key, int x, int y)
 	case '2':
 		Boolean_garvity = false;
 		toggleScene(2);
+		break;
+	case '3':
+		Boolean_garvity = false;
+		toggleScene(3);
 		break;
 	case ' ':
 		paused = !paused;

@@ -29,7 +29,7 @@ namespace Quantum {
 	private:
 		QmUpdater* updater;
 		glm::vec3 position;
-		glm::vec3 velocity;
+		glm::vec3 velocity;	
 		glm::vec3 acceleration;
 		glm::vec3 forceAccumulator;
 		float invMass;
