@@ -1,17 +1,19 @@
 #pragma once
 #include "QmForceGenerator.h"
+#include "QmParticle.h"
 
 
 namespace Quantum {
 
-    class QmParticle;
-
     class QmSpring :
-        virtual public QmForceGenerator
+        public QmForceGenerator
     {
     public:
-        QmSpring(float, float, QmParticle*);
+        QmSpring(QmParticle*);
         void update(QmParticle* p);
+        QmParticle* getOtherParticle();
+        float getRestLength();
+        float getSpringConstant();
     private:
         float _restLength;
         float _springConstant;

@@ -10,6 +10,7 @@
 #include <glm/glm.hpp>
 #include <ctime>
 #include <string>
+#include <sstream>
 
 #include "Quantum.h"
 #include "GxWorld.h"
@@ -19,6 +20,8 @@
 #include "QmDrag.h"
 #include "QmMagnetism.h"
 #include "QmFixedMagnetism.h"
+#include "QmSpring.h"
+#include "QmFixedSpring.h"
 
 using namespace std;
 using namespace Quantum;
@@ -27,12 +30,11 @@ using namespace Quantum;
 GxWorld gxWorld;
 QmWorld pxWorld;
 
-bool Boolean_garvity = true;
 bool attract = true;
 
 glm::vec3* mousePointer;
 
-int scene = 0;
+int scene = 1;
 
 // ********************** GLUT 
 // Variables globales
@@ -59,9 +61,46 @@ bool delta = true;
 
 GLfloat light_pos[] = { 0.0, 6.0, 1.0, 1.0 };
 
+float cursormagnetisme = 1000.0f;
 // ********************************************
 
-float cursormagnetisme = 1000.0f;
+
+std::string text = "";
+
+void updateText() {
+	std::stringstream ss;
+	ss << "Scene : " << (scene) << std::endl;
+	ss << "Gravity: " << (pxWorld.getGravityIsActive() ? "True" : "False") << std::endl;
+	if(scene == 2)
+		ss << "Magnetism : " << cursormagnetisme << endl;
+	ss << "Numerical Integrator: " << (pxWorld.getNumericalIntegrator()) << std::endl;
+	ss << "Paused : " << (paused ? "True" : "False") << endl;
+	text = ss.str();
+	glutPostRedisplay(); // request redisplay to show updated text
+}
+
+void renderText() {
+	// Split the text string into separate lines based on newline characters
+	std::vector<std::string> lines;
+	std::istringstream ss(text);
+	std::string line;
+	while (std::getline(ss, line, '\n')) {
+		lines.push_back(line);
+	}
+
+	// Render each line separately, with appropriate line spacing
+	int lineHeight = 20; // adjust as needed
+	int y = 20; // starting y position
+	for (const auto& line : lines) {
+		glRasterPos2f(10, y);
+		for (unsigned int i = 0; i < line.length(); i++) {
+			glutBitmapCharacter(GLUT_BITMAP_HELVETICA_12, line[i]);
+		}
+		y += lineHeight;
+	}
+}
+
+
 
 glm::vec3 randomVector(float min, float max)
 {
@@ -130,9 +169,8 @@ QmParticle* createParticleFromCursorScene1()
 	return p;
 }
 
-QmParticle* createParticleFromCursorScene3()
+QmParticle* createParticleScene3(glm::vec3 pos)
 {
-	glm::vec3 pos = randomVector(1,5);
 	GxParticle* g = new GxParticle(randomVector(1, 0), 0.5f, pos);
 	QmParticle* p = new QmParticle(pos, randomVector(1, 10), randomVector(0, 0), 3, 10);
 	QmForceRegistery* f = new QmForceRegistery(p, new QmDrag(1, 2));
@@ -176,7 +214,7 @@ void initScene2()
 	printf("Scene 2.\n");
 	mousePointer = new glm::vec3(0, 4.5, 0);
 	cursormagnetisme = 1000.0f;
-	for (int i = 0; i < 100; i++) {
+	for (int i = 0; i < 10; i++) {
 		createParticlePositive();
 		createParticleNegative();
 	}
@@ -186,10 +224,75 @@ void initScene2()
 void initScene3() {
 	printf("Scene 3.\n");
 	mousePointer = new glm::vec3(0, 4.5, 0);
+	QmParticle* p1 = createParticleScene3(glm::vec3(-1, 0, -1));
+	QmParticle* p2 = createParticleScene3(glm::vec3(1, 0, -1));
+	QmParticle* p3 = createParticleScene3(glm::vec3(0, 0, 1));
 
-	for (int i = 0; i < 10; i++) {
-		createParticleFromCursorScene3();
-	}
+	QmParticle* p4 = createParticleScene3(glm::vec3(0, -1, 0));
+	QmParticle* p5 = createParticleScene3(glm::vec3(0, -2, 0));
+
+	QmParticle* p6 = createParticleScene3(glm::vec3(-1, -3, -1));
+	QmParticle* p7 = createParticleScene3(glm::vec3(1, -3, -1));
+	QmParticle* p8 = createParticleScene3(glm::vec3(0, -3, 1));
+
+	QmParticle* p9 = createParticleScene3(glm::vec3(0, -4, 0));
+
+	QmParticle* p10 = createParticleScene3(glm::vec3(-1, -5, -1));
+	QmParticle* p11 = createParticleScene3(glm::vec3(1, -5, -1));
+	QmParticle* p12 = createParticleScene3(glm::vec3(0, -5, 1));
+
+	pxWorld.addForceRegistery(new QmForceRegistery(p1, new QmFixedSpring(mousePointer)));
+	pxWorld.addForceRegistery(new QmForceRegistery(p2, new QmFixedSpring(mousePointer)));
+	pxWorld.addForceRegistery(new QmForceRegistery(p3, new QmFixedSpring(mousePointer)));
+
+	pxWorld.addForceRegistery(new QmForceRegistery(p1, new QmSpring(p2)));
+	pxWorld.addForceRegistery(new QmForceRegistery(p1, new QmSpring(p3)));
+	pxWorld.addForceRegistery(new QmForceRegistery(p2, new QmSpring(p1)));
+	pxWorld.addForceRegistery(new QmForceRegistery(p2, new QmSpring(p3)));
+	pxWorld.addForceRegistery(new QmForceRegistery(p3, new QmSpring(p1)));
+	pxWorld.addForceRegistery(new QmForceRegistery(p3, new QmSpring(p2)));
+
+	pxWorld.addForceRegistery(new QmForceRegistery(p4, new QmSpring(p1)));
+	pxWorld.addForceRegistery(new QmForceRegistery(p4, new QmSpring(p2)));
+	pxWorld.addForceRegistery(new QmForceRegistery(p4, new QmSpring(p3)));
+	pxWorld.addForceRegistery(new QmForceRegistery(p1, new QmSpring(p4)));
+	pxWorld.addForceRegistery(new QmForceRegistery(p2, new QmSpring(p4)));
+	pxWorld.addForceRegistery(new QmForceRegistery(p3, new QmSpring(p4)));
+
+	pxWorld.addForceRegistery(new QmForceRegistery(p4, new QmSpring(p5)));
+	pxWorld.addForceRegistery(new QmForceRegistery(p5, new QmSpring(p4)));
+
+	pxWorld.addForceRegistery(new QmForceRegistery(p5, new QmSpring(p6)));
+	pxWorld.addForceRegistery(new QmForceRegistery(p5, new QmSpring(p7)));
+	pxWorld.addForceRegistery(new QmForceRegistery(p5, new QmSpring(p8)));
+	pxWorld.addForceRegistery(new QmForceRegistery(p6, new QmSpring(p5)));
+	pxWorld.addForceRegistery(new QmForceRegistery(p7, new QmSpring(p5)));
+	pxWorld.addForceRegistery(new QmForceRegistery(p8, new QmSpring(p5)));
+
+	pxWorld.addForceRegistery(new QmForceRegistery(p6, new QmSpring(p7)));
+	pxWorld.addForceRegistery(new QmForceRegistery(p6, new QmSpring(p8)));
+	pxWorld.addForceRegistery(new QmForceRegistery(p7, new QmSpring(p6)));
+	pxWorld.addForceRegistery(new QmForceRegistery(p7, new QmSpring(p8)));
+	pxWorld.addForceRegistery(new QmForceRegistery(p8, new QmSpring(p6)));
+	pxWorld.addForceRegistery(new QmForceRegistery(p8, new QmSpring(p7)));
+
+	pxWorld.addForceRegistery(new QmForceRegistery(p8, new QmSpring(p9)));
+	pxWorld.addForceRegistery(new QmForceRegistery(p9, new QmSpring(p8)));
+
+	pxWorld.addForceRegistery(new QmForceRegistery(p9, new QmSpring(p10)));
+	pxWorld.addForceRegistery(new QmForceRegistery(p9, new QmSpring(p11)));
+	pxWorld.addForceRegistery(new QmForceRegistery(p9, new QmSpring(p12)));
+	pxWorld.addForceRegistery(new QmForceRegistery(p10, new QmSpring(p9)));
+	pxWorld.addForceRegistery(new QmForceRegistery(p11, new QmSpring(p9)));
+	pxWorld.addForceRegistery(new QmForceRegistery(p12, new QmSpring(p9)));
+
+	pxWorld.addForceRegistery(new QmForceRegistery(p10, new QmSpring(p11)));
+	pxWorld.addForceRegistery(new QmForceRegistery(p10, new QmSpring(p12)));
+	pxWorld.addForceRegistery(new QmForceRegistery(p11, new QmSpring(p10)));
+	pxWorld.addForceRegistery(new QmForceRegistery(p11, new QmSpring(p12)));
+	pxWorld.addForceRegistery(new QmForceRegistery(p12, new QmSpring(p10)));
+	pxWorld.addForceRegistery(new QmForceRegistery(p12, new QmSpring(p11)));
+
 }
 
 // ***************************** GLUT methods
@@ -297,6 +400,44 @@ void drawFunc()
 		glCallList(DrawListSphere);
 		glPopMatrix();
 	}
+
+	if (scene == 3) {
+		for (QmForceRegistery* qmFR : pxWorld.getForcesRegistery()) {
+			QmForceGenerator* qmFG = qmFR->fg;
+
+			if (dynamic_cast<QmSpring*> (qmFG)) {
+				glBegin(GL_LINES);
+				glVertex3f(qmFR->p->getPos().x, qmFR->p->getPos().y, qmFR->p->getPos().z);
+				glVertex3f(((QmSpring*)qmFG)->getOtherParticle()->getPos().x, ((QmSpring*)qmFG)->getOtherParticle()->getPos().y, ((QmSpring*)qmFG)->getOtherParticle()->getPos().z);
+				glEnd();
+			}
+
+			else if (dynamic_cast<QmFixedSpring*> (qmFG)) {
+				glBegin(GL_LINES);
+				glVertex3f(qmFR->p->getPos().x, qmFR->p->getPos().y, qmFR->p->getPos().z);
+				glVertex3f(((QmFixedSpring*)qmFG)->getFixedPos()->x, ((QmFixedSpring*)qmFG)->getFixedPos()->y, ((QmFixedSpring*)qmFG)->getFixedPos()->z);
+				glEnd();
+			}
+		}
+	}
+	// save the current projection matrix and set up an orthographic projection
+	glMatrixMode(GL_PROJECTION);
+	glPushMatrix();
+	glLoadIdentity();
+	glOrtho(0, SCREEN_X, SCREEN_Y, 0, -1, 1);
+
+	// reset the modelview matrix to the identity matrix
+	glMatrixMode(GL_MODELVIEW);
+	glLoadIdentity();
+
+	// draw the text at a fixed position on the screen
+	renderText();
+
+	// restore the original projection matrix
+	glMatrixMode(GL_PROJECTION);
+	glPopMatrix();
+	glMatrixMode(GL_MODELVIEW);
+
 	glutSwapBuffers();
 }
 
@@ -363,32 +504,21 @@ void keyFunc(unsigned char key, int x, int y)
 		exit(0);
 		break;
 	case '1':
-		Boolean_garvity = true;
 		toggleScene(1);
 		break;
 	case '2':
-		Boolean_garvity = false;
 		toggleScene(2);
 		break;
 	case '3':
-		Boolean_garvity = false;
 		toggleScene(3);
 		break;
 	case ' ':
 		paused = !paused;
 		break;
 	case 'g':
-		cout << Boolean_garvity << endl;
-		if (Boolean_garvity) {
-			Boolean_garvity = false;
-			pxWorld.SetGravity(Boolean_garvity);
-			cout << "Gravity off " << Boolean_garvity << endl;
-		}
-		else {
-			Boolean_garvity = true;
-			cout << "Gravity on " << Boolean_garvity << endl;
-			pxWorld.SetGravity(Boolean_garvity);
-		}
+		pxWorld.SetGravity(!pxWorld.getGravityIsActive());
+		cout << "Gravity : " << pxWorld.getGravityIsActive() << endl;
+		break;
 	case 'f':
 		if (attract) {
 			attract = false;
@@ -396,6 +526,7 @@ void keyFunc(unsigned char key, int x, int y)
 		else {
 			attract = true;
 		}
+		break;
 	case 'd':
 		if (delta) {
 			delta = false;
@@ -407,9 +538,15 @@ void keyFunc(unsigned char key, int x, int y)
 			pxWorld.SetDelta(true);
 			cout << "Delta : " << pxWorld.GetDelta() << endl;
 		}
+		break;
+	case 's':
+		pxWorld.changeNumericalIntegrator();
+		cout << "Numerical Integrator:" << pxWorld.getNumericalIntegrator() << endl;
+		break;
 	default:
 		break;
 	}
+	updateText();
 }
 
 void initGraphics(int argc, char** argv)
@@ -427,8 +564,6 @@ void initGraphics(int argc, char** argv)
 
 	glClearColor(0.0, 0.0, 0.0, 1.0);
 	glEnable(GL_DEPTH_TEST);
-	//glEnable(GL_PROGRAM_POINT_SIZE);
-	//glPointSize(5);
 	glMatrixMode(GL_PROJECTION);
 	glLoadIdentity();
 	float aspect = SCREEN_X / (float)SCREEN_Y;
@@ -446,11 +581,8 @@ int main(int argc, char** argv)
 	initGraphics(argc, argv);
 
 	toggleScene(1);
+	updateText();
 
 	glutMainLoop();
 	return 0;
 }
-
-
-
-

@@ -13,7 +13,6 @@ QmWorld::QmWorld()
 	std::cout << "Starting Quantum Physics engine." << std::endl;
 	_time = 0.f;
 	_ticktime = 0.f;
-	//isGravityActive = true;
 	gravity = glm::vec3(0, -9.81, 0);
 	_delta = false;
 }
@@ -55,7 +54,7 @@ void QmWorld::simulate(float t)
 	_time += t;
 	float dt;
 	bool useDELTA = _delta;
-	float DELTA = 0.1f;
+	float DELTA = 0.01f;
 	dt = _time - _ticktime;
 	if (useDELTA) { // deterministic framerate-independent simulation
 		while (dt >= DELTA) {
@@ -73,8 +72,19 @@ void QmWorld::simulate(float t)
 
 void QmWorld::integrate(float t)
 {
-	for (QmBody* b : bodies)
-		b->integrate(t);
+	if (numericalIntegrator == 0) {
+		for (QmBody* b : bodies)
+			b->integrateExplicit(t);
+	}
+	else if (numericalIntegrator == 1) {
+		for (QmBody* b : bodies)
+			b->integrateSemiExplicit(t);
+	}
+	else if (numericalIntegrator == 2) {
+		for (QmBody* b : bodies)
+			b->integrateRK4(t);
+	}
+	
 }
 
 void QmWorld::applyGravity() {
@@ -100,9 +110,27 @@ void QmWorld::addForceRegistery(QmForceRegistery* f) {
 	forcesRegistries.push_back(f);
 }
 
+std::vector <QmForceRegistery*> QmWorld::getForcesRegistery() {
+	return forcesRegistries;
+}
+
 std::vector<QmBody*> QmWorld::getBodies()
 {
 	return bodies;
+}
+
+int QmWorld::getNumericalIntegrator() {
+	return numericalIntegrator;
+}
+
+void QmWorld::changeNumericalIntegrator() {
+	numericalIntegrator++;
+	numericalIntegrator %= 3;
+}
+
+bool Quantum::QmWorld::getGravityIsActive()
+{
+	return _isGravityActive;
 }
 
 void QmWorld::clear()

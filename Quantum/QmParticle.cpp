@@ -17,7 +17,7 @@ QmParticle::QmParticle(glm::vec3 pos, glm::vec3 vel, glm::vec3 acc, float Mass, 
 	velocity = vel;
 	acceleration = acc;
 	invMass = 1 / Mass;
-	damping = (charge == 0.0f) ? 1.0f : 0.95f;
+	damping = (charge == 0.0f) ? .90f : 1.0f;
 	type = TYPE_PARTICLE;
 	_charge = charge;
 }
@@ -27,17 +27,31 @@ QmParticle::~QmParticle()
 	delete updater;
 }
 
-void QmParticle::integrate(float t)
+void QmParticle::integrateExplicit(float t)
 {
-	//acc += force accumulator * InvMass
-	acceleration += forceAccumulator + invMass;
-	// your code here
+	acceleration += forceAccumulator * invMass;
 	position = position + t * velocity;
 	velocity = velocity + t * acceleration;
 	velocity *= damping;
 	if (updater != NULL) {
 		updater->update(position);
 	}
+}
+
+void QmParticle::integrateSemiExplicit(float t)
+{
+	acceleration += forceAccumulator * invMass;
+	velocity = velocity + t * acceleration;
+	position = position + t * velocity;
+	velocity *= damping;
+	if (updater != NULL) {
+		updater->update(position);
+	}
+}
+
+void QmParticle::integrateRK4(float t)
+{
+	
 }
 
 QmUpdater* QmParticle::GetUpdater() {
@@ -80,6 +94,6 @@ void Quantum::QmParticle::addForce(glm::vec3 f)
 }
 
 void Quantum::QmParticle::clearParticle() {
-	acceleration = glm::vec3(0);
-	forceAccumulator = glm::vec3(0);
+	acceleration = glm::vec3(0,0,0);
+	forceAccumulator = glm::vec3(0,0,0);
 }

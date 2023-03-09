@@ -11,7 +11,9 @@ namespace Quantum {
 	
 	class QmBody {
 	public:
-		virtual void integrate(float) {};
+		virtual void integrateExplicit(float) {};
+		virtual void integrateSemiExplicit(float) {};
+		virtual void integrateRK4(float) {};
 		virtual void clearParticle() {};
 		int getType() const { return type; }
 		virtual void SetAcc(glm::vec3 acc) {};

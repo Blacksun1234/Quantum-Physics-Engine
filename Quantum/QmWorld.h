@@ -27,6 +27,10 @@ namespace Quantum {
 		void clear();
 		void clearScene();
 		void addForceRegistery(QmForceRegistery* f);
+		int getNumericalIntegrator();
+		bool getGravityIsActive();
+		void changeNumericalIntegrator();
+		std::vector <QmForceRegistery*> QmWorld::getForcesRegistery();
 		std::vector<QmBody*> bodies;
 		std::vector<QmForceRegistery*> forcesRegistries;
 
@@ -39,6 +43,7 @@ namespace Quantum {
 		void integrate(float);
 		void applyGravity();
 		void updateForces();
+		int numericalIntegrator = 0;
 		
 	};
 
