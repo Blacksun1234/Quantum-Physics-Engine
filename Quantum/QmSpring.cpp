@@ -2,10 +2,10 @@
 #include "QmSpring.h"
 
 
-Quantum::QmSpring::QmSpring(QmParticle* otherbody)
+Quantum::QmSpring::QmSpring(QmParticle* otherbody, float *restLength, float *springConstant)
 {
-	_restLength = 2.0f;
-	_springConstant = 3000.0f;
+	_restLength = *restLength; // longueur câble au repos
+	_springConstant = *springConstant; // puissance pr revenir au repos
 	_otherbody = otherbody;
 }
 

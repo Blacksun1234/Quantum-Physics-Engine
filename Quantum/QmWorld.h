@@ -22,7 +22,7 @@ namespace Quantum {
 		void addBody(QmBody*);
 		std::vector<QmBody*> getBodies();
 		void SetGravity(bool isGravityAcitve);
-		void SetDelta(bool);
+		void SetDelta();
 		bool GetDelta();
 		void clear();
 		void clearScene();

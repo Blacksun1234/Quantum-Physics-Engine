@@ -26,8 +26,13 @@ void QmWorld::SetGravity(bool isGravityActive) {
 	_isGravityActive = isGravityActive;
 }
 
-void QmWorld::SetDelta(bool delta) {
-	_delta = delta;
+void QmWorld::SetDelta() {
+	if (_delta) {
+		_delta = false;
+	}
+	else {
+		_delta = true;
+	}
 }
 
 bool QmWorld::GetDelta() {

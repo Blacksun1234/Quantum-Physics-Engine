@@ -1,10 +1,10 @@
 #include "stdafx.h"
 #include "QmFixedSpring.h"
 
-Quantum::QmFixedSpring::QmFixedSpring(glm::vec3 *fixedpos)
+Quantum::QmFixedSpring::QmFixedSpring(glm::vec3 *fixedpos, float *restLength, float *springConstant)
 {
-	_restLength = 2.0f;
-	_springConstant = 300.0;
+	_restLength = *restLength;
+	_springConstant = *springConstant;
 	_fixedpos = fixedpos;
 }
 

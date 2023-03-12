@@ -17,7 +17,8 @@ QmParticle::QmParticle(glm::vec3 pos, glm::vec3 vel, glm::vec3 acc, float Mass, 
 	velocity = vel;
 	acceleration = acc;
 	invMass = 1 / Mass;
-	damping = (charge == 0.0f) ? .90f : 1.0f;
+	//damping = (charge == 0.0f) ? .90f : 1.0f;
+	damping = 0.99f;
 	type = TYPE_PARTICLE;
 	_charge = charge;
 }
@@ -30,8 +31,8 @@ QmParticle::~QmParticle()
 void QmParticle::integrateExplicit(float t)
 {
 	acceleration += forceAccumulator * invMass;
-	position = position + t * velocity;
-	velocity = velocity + t * acceleration;
+	position += t * velocity;
+	velocity += t * acceleration;
 	velocity *= damping;
 	if (updater != NULL) {
 		updater->update(position);
@@ -41,8 +42,8 @@ void QmParticle::integrateExplicit(float t)
 void QmParticle::integrateSemiExplicit(float t)
 {
 	acceleration += forceAccumulator * invMass;
-	velocity = velocity + t * acceleration;
-	position = position + t * velocity;
+	velocity += t * acceleration;
+	position += t * velocity;
 	velocity *= damping;
 	if (updater != NULL) {
 		updater->update(position);

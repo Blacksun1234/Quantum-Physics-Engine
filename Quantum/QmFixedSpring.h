@@ -7,7 +7,7 @@ namespace Quantum {
         public QmForceGenerator
     {
     public:
-        QmFixedSpring(glm::vec3 *_fixedpos);
+        QmFixedSpring(glm::vec3 *_fixedpos, float *restLength, float *springConstant);
         void update(QmParticle* p);
         glm::vec3* getFixedPos();
         float getRestLengthFixed();

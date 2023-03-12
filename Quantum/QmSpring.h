@@ -9,7 +9,7 @@ namespace Quantum {
         public QmForceGenerator
     {
     public:
-        QmSpring(QmParticle*);
+        QmSpring(QmParticle*, float *restLength, float *springConstant);
         void update(QmParticle* p);
         QmParticle* getOtherParticle();
         float getRestLength();

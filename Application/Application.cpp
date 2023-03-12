@@ -26,7 +26,6 @@
 using namespace std;
 using namespace Quantum;
 
-
 GxWorld gxWorld;
 QmWorld pxWorld;
 
@@ -59,11 +58,13 @@ float accTime = 0.0;
 bool paused = false;
 bool delta = true;
 
+float restlength = 2.0f; // longueur câble au repos
+float springConstant = 4000.0f; // puissance pr revenir au repos
+
 GLfloat light_pos[] = { 0.0, 6.0, 1.0, 1.0 };
 
-float cursormagnetisme = 1000.0f;
+float cursormagnetisme = 0.0f;
 // ********************************************
-
 
 std::string text = "";
 
@@ -75,6 +76,9 @@ void updateText() {
 		ss << "Magnetism : " << cursormagnetisme << endl;
 	ss << "Numerical Integrator: " << (pxWorld.getNumericalIntegrator()) << std::endl;
 	ss << "Paused : " << (paused ? "True" : "False") << endl;
+	ss << "Delta : " << (pxWorld.GetDelta() ? "True" : "False") << endl;
+	ss << "restlength : " << restlength << endl;
+	ss << "springConstant : "  << springConstant << endl;
 	text = ss.str();
 	glutPostRedisplay(); // request redisplay to show updated text
 }
@@ -100,8 +104,6 @@ void renderText() {
 	}
 }
 
-
-
 glm::vec3 randomVector(float min, float max)
 {
 	float x = min + (max - min)*((rand() % 100) / 100.f);
@@ -115,7 +117,7 @@ QmParticle* createParticlePositive()
 {
 	glm::vec3 pos = randomVector(-5, 5);
 	GxParticle* g = new GxParticle(glm::vec3(1,0,0), 0.5f , pos);
-	QmParticle* p = new QmParticle(pos, randomVector(0, 0), randomVector(0, 0), 3, 1);
+	QmParticle* p = new QmParticle(pos, randomVector(0, 0), randomVector(0, 0), 3, 10);
 	p->setUpdater(new GxUpdater(g));
 	gxWorld.addParticle(g);
 	pxWorld.addBody(p);
@@ -128,6 +130,8 @@ QmParticle* createParticlePositive()
 			pxWorld.addForceRegistery(f);
 			QmForceRegistery* f2 = new QmForceRegistery( (QmParticle*)b, new QmMagnetism(10.f, 5.0f, p ));
 			pxWorld.addForceRegistery(f2); 
+
+			pxWorld.addForceRegistery(new QmForceRegistery((QmParticle*)b, new QmFixedMagnetism(10.f, 5.0f, mousePointer, &cursormagnetisme)));
 		}
 	}
 	return p;
@@ -137,7 +141,7 @@ QmParticle* createParticleNegative()
 {
 	glm::vec3 pos = randomVector(-5, 5);
 	GxParticle* g = new GxParticle(glm::vec3(0, 0, 1), 0.5f, pos);
-	QmParticle* p = new QmParticle(pos, randomVector(0, 0), randomVector(0, 0), 3, -1);
+	QmParticle* p = new QmParticle(pos, randomVector(0, 0), randomVector(0, 0), 3, -10);
 	p->setUpdater(new GxUpdater(g));
 	gxWorld.addParticle(g);
 	pxWorld.addBody(p);
@@ -150,6 +154,8 @@ QmParticle* createParticleNegative()
 			pxWorld.addForceRegistery(f);
 			QmForceRegistery* f2 = new QmForceRegistery((QmParticle*)b, new QmMagnetism(10.f, 5.0f, p));
 			pxWorld.addForceRegistery(f2);
+
+			pxWorld.addForceRegistery(new QmForceRegistery((QmParticle*)b, new QmFixedMagnetism(10.f, 5.0f, mousePointer, &cursormagnetisme)));
 		}
 	}
 	return p;
@@ -186,7 +192,7 @@ void createMagnetismeFromCursorScene2()
 {
 	glm::vec3 pos = *mousePointer;
 	
-	if (cursormagnetisme == 1000.f) {
+	if (cursormagnetisme == 20.f) {
 		for (QmBody* b : pxWorld.bodies) {
 			cursormagnetisme = 0.f;
 			pxWorld.addForceRegistery(new QmForceRegistery((QmParticle*)b, new QmFixedMagnetism(10.f, 5.0f, mousePointer, &cursormagnetisme)));
@@ -199,7 +205,6 @@ void createMagnetismeFromCursorScene2()
 	else {
 		cursormagnetisme = -500.f;
 	}
-
 }
 
 void initScene1()
@@ -213,8 +218,7 @@ void initScene2()
 {
 	printf("Scene 2.\n");
 	mousePointer = new glm::vec3(0, 4.5, 0);
-	cursormagnetisme = 1000.0f;
-	for (int i = 0; i < 10; i++) {
+	for (int i = 0; i < 50; i++) {
 		createParticlePositive();
 		createParticleNegative();
 	}
@@ -241,57 +245,57 @@ void initScene3() {
 	QmParticle* p11 = createParticleScene3(glm::vec3(1, -5, -1));
 	QmParticle* p12 = createParticleScene3(glm::vec3(0, -5, 1));
 
-	pxWorld.addForceRegistery(new QmForceRegistery(p1, new QmFixedSpring(mousePointer)));
-	pxWorld.addForceRegistery(new QmForceRegistery(p2, new QmFixedSpring(mousePointer)));
-	pxWorld.addForceRegistery(new QmForceRegistery(p3, new QmFixedSpring(mousePointer)));
+	pxWorld.addForceRegistery(new QmForceRegistery(p1, new QmFixedSpring(mousePointer, &restlength, &springConstant)));
+	pxWorld.addForceRegistery(new QmForceRegistery(p2, new QmFixedSpring(mousePointer, &restlength, &springConstant)));
+	pxWorld.addForceRegistery(new QmForceRegistery(p3, new QmFixedSpring(mousePointer, &restlength, &springConstant)));
 
-	pxWorld.addForceRegistery(new QmForceRegistery(p1, new QmSpring(p2)));
-	pxWorld.addForceRegistery(new QmForceRegistery(p1, new QmSpring(p3)));
-	pxWorld.addForceRegistery(new QmForceRegistery(p2, new QmSpring(p1)));
-	pxWorld.addForceRegistery(new QmForceRegistery(p2, new QmSpring(p3)));
-	pxWorld.addForceRegistery(new QmForceRegistery(p3, new QmSpring(p1)));
-	pxWorld.addForceRegistery(new QmForceRegistery(p3, new QmSpring(p2)));
+	pxWorld.addForceRegistery(new QmForceRegistery(p1, new QmSpring(p2, &restlength, &springConstant)));
+	pxWorld.addForceRegistery(new QmForceRegistery(p1, new QmSpring(p3, &restlength, &springConstant)));
+	pxWorld.addForceRegistery(new QmForceRegistery(p2, new QmSpring(p1, &restlength, &springConstant)));
+	pxWorld.addForceRegistery(new QmForceRegistery(p2, new QmSpring(p3, &restlength, &springConstant)));
+	pxWorld.addForceRegistery(new QmForceRegistery(p3, new QmSpring(p1, &restlength, &springConstant)));
+	pxWorld.addForceRegistery(new QmForceRegistery(p3, new QmSpring(p2, &restlength, &springConstant)));
 
-	pxWorld.addForceRegistery(new QmForceRegistery(p4, new QmSpring(p1)));
-	pxWorld.addForceRegistery(new QmForceRegistery(p4, new QmSpring(p2)));
-	pxWorld.addForceRegistery(new QmForceRegistery(p4, new QmSpring(p3)));
-	pxWorld.addForceRegistery(new QmForceRegistery(p1, new QmSpring(p4)));
-	pxWorld.addForceRegistery(new QmForceRegistery(p2, new QmSpring(p4)));
-	pxWorld.addForceRegistery(new QmForceRegistery(p3, new QmSpring(p4)));
+	pxWorld.addForceRegistery(new QmForceRegistery(p4, new QmSpring(p1, &restlength, &springConstant)));
+	pxWorld.addForceRegistery(new QmForceRegistery(p4, new QmSpring(p2, &restlength, &springConstant)));
+	pxWorld.addForceRegistery(new QmForceRegistery(p4, new QmSpring(p3, &restlength, &springConstant)));
+	pxWorld.addForceRegistery(new QmForceRegistery(p1, new QmSpring(p4, &restlength, &springConstant)));
+	pxWorld.addForceRegistery(new QmForceRegistery(p2, new QmSpring(p4, &restlength, &springConstant)));
+	pxWorld.addForceRegistery(new QmForceRegistery(p3, new QmSpring(p4, &restlength, &springConstant)));
 
-	pxWorld.addForceRegistery(new QmForceRegistery(p4, new QmSpring(p5)));
-	pxWorld.addForceRegistery(new QmForceRegistery(p5, new QmSpring(p4)));
+	pxWorld.addForceRegistery(new QmForceRegistery(p4, new QmSpring(p5, &restlength, &springConstant)));
+	pxWorld.addForceRegistery(new QmForceRegistery(p5, new QmSpring(p4, &restlength, &springConstant)));
 
-	pxWorld.addForceRegistery(new QmForceRegistery(p5, new QmSpring(p6)));
-	pxWorld.addForceRegistery(new QmForceRegistery(p5, new QmSpring(p7)));
-	pxWorld.addForceRegistery(new QmForceRegistery(p5, new QmSpring(p8)));
-	pxWorld.addForceRegistery(new QmForceRegistery(p6, new QmSpring(p5)));
-	pxWorld.addForceRegistery(new QmForceRegistery(p7, new QmSpring(p5)));
-	pxWorld.addForceRegistery(new QmForceRegistery(p8, new QmSpring(p5)));
+	pxWorld.addForceRegistery(new QmForceRegistery(p5, new QmSpring(p6, &restlength, &springConstant)));
+	pxWorld.addForceRegistery(new QmForceRegistery(p5, new QmSpring(p7, &restlength, &springConstant)));
+	pxWorld.addForceRegistery(new QmForceRegistery(p5, new QmSpring(p8, &restlength, &springConstant)));
+	pxWorld.addForceRegistery(new QmForceRegistery(p6, new QmSpring(p5, &restlength, &springConstant)));
+	pxWorld.addForceRegistery(new QmForceRegistery(p7, new QmSpring(p5, &restlength, &springConstant)));
+	pxWorld.addForceRegistery(new QmForceRegistery(p8, new QmSpring(p5, &restlength, &springConstant)));
 
-	pxWorld.addForceRegistery(new QmForceRegistery(p6, new QmSpring(p7)));
-	pxWorld.addForceRegistery(new QmForceRegistery(p6, new QmSpring(p8)));
-	pxWorld.addForceRegistery(new QmForceRegistery(p7, new QmSpring(p6)));
-	pxWorld.addForceRegistery(new QmForceRegistery(p7, new QmSpring(p8)));
-	pxWorld.addForceRegistery(new QmForceRegistery(p8, new QmSpring(p6)));
-	pxWorld.addForceRegistery(new QmForceRegistery(p8, new QmSpring(p7)));
+	pxWorld.addForceRegistery(new QmForceRegistery(p6, new QmSpring(p7, &restlength, &springConstant)));
+	pxWorld.addForceRegistery(new QmForceRegistery(p6, new QmSpring(p8, &restlength, &springConstant)));
+	pxWorld.addForceRegistery(new QmForceRegistery(p7, new QmSpring(p6, &restlength, &springConstant)));
+	pxWorld.addForceRegistery(new QmForceRegistery(p7, new QmSpring(p8, &restlength, &springConstant)));
+	pxWorld.addForceRegistery(new QmForceRegistery(p8, new QmSpring(p6, &restlength, &springConstant)));
+	pxWorld.addForceRegistery(new QmForceRegistery(p8, new QmSpring(p7, &restlength, &springConstant)));
 
-	pxWorld.addForceRegistery(new QmForceRegistery(p8, new QmSpring(p9)));
-	pxWorld.addForceRegistery(new QmForceRegistery(p9, new QmSpring(p8)));
+	pxWorld.addForceRegistery(new QmForceRegistery(p8, new QmSpring(p9, &restlength, &springConstant)));
+	pxWorld.addForceRegistery(new QmForceRegistery(p9, new QmSpring(p8, &restlength, &springConstant)));
 
-	pxWorld.addForceRegistery(new QmForceRegistery(p9, new QmSpring(p10)));
-	pxWorld.addForceRegistery(new QmForceRegistery(p9, new QmSpring(p11)));
-	pxWorld.addForceRegistery(new QmForceRegistery(p9, new QmSpring(p12)));
-	pxWorld.addForceRegistery(new QmForceRegistery(p10, new QmSpring(p9)));
-	pxWorld.addForceRegistery(new QmForceRegistery(p11, new QmSpring(p9)));
-	pxWorld.addForceRegistery(new QmForceRegistery(p12, new QmSpring(p9)));
+	pxWorld.addForceRegistery(new QmForceRegistery(p9, new QmSpring(p10, &restlength, &springConstant)));
+	pxWorld.addForceRegistery(new QmForceRegistery(p9, new QmSpring(p11, &restlength, &springConstant)));
+	pxWorld.addForceRegistery(new QmForceRegistery(p9, new QmSpring(p12, &restlength, &springConstant)));
+	pxWorld.addForceRegistery(new QmForceRegistery(p10, new QmSpring(p9, &restlength, &springConstant)));
+	pxWorld.addForceRegistery(new QmForceRegistery(p11, new QmSpring(p9, &restlength, &springConstant)));
+	pxWorld.addForceRegistery(new QmForceRegistery(p12, new QmSpring(p9, &restlength, &springConstant)));
 
-	pxWorld.addForceRegistery(new QmForceRegistery(p10, new QmSpring(p11)));
-	pxWorld.addForceRegistery(new QmForceRegistery(p10, new QmSpring(p12)));
-	pxWorld.addForceRegistery(new QmForceRegistery(p11, new QmSpring(p10)));
-	pxWorld.addForceRegistery(new QmForceRegistery(p11, new QmSpring(p12)));
-	pxWorld.addForceRegistery(new QmForceRegistery(p12, new QmSpring(p10)));
-	pxWorld.addForceRegistery(new QmForceRegistery(p12, new QmSpring(p11)));
+	pxWorld.addForceRegistery(new QmForceRegistery(p10, new QmSpring(p11, &restlength, &springConstant)));
+	pxWorld.addForceRegistery(new QmForceRegistery(p10, new QmSpring(p12, &restlength, &springConstant)));
+	pxWorld.addForceRegistery(new QmForceRegistery(p11, new QmSpring(p10, &restlength, &springConstant)));
+	pxWorld.addForceRegistery(new QmForceRegistery(p11, new QmSpring(p12, &restlength, &springConstant)));
+	pxWorld.addForceRegistery(new QmForceRegistery(p12, new QmSpring(p10, &restlength, &springConstant)));
+	pxWorld.addForceRegistery(new QmForceRegistery(p12, new QmSpring(p11, &restlength, &springConstant)));
 
 }
 
@@ -364,10 +368,6 @@ void idleFunc()
 	if (buttons == 3) {
 		if (scene == 1)
 			createParticleFromCursorScene1();
-		else if (scene == 2) {
-			createMagnetismeFromCursorScene2();
-		}
-			
 	}
 	glutPostRedisplay();
 }
@@ -430,6 +430,8 @@ void drawFunc()
 	glMatrixMode(GL_MODELVIEW);
 	glLoadIdentity();
 
+	updateText();
+
 	// draw the text at a fixed position on the screen
 	renderText();
 
@@ -447,12 +449,17 @@ void mouseFunc(int button, int state, int x, int y)
 	if (button == GLUT_LEFT_BUTTON && state == GLUT_DOWN) buttons = 1;
 	if (button == GLUT_MIDDLE_BUTTON && state == GLUT_DOWN) buttons = 2;
 	if (button == GLUT_RIGHT_BUTTON && state == GLUT_DOWN) buttons = 3;
+	if (button == GLUT_RIGHT_BUTTON && state == GLUT_DOWN) cursormagnetisme = 20.0f;
+	if (button == GLUT_RIGHT_BUTTON && state == GLUT_UP) cursormagnetisme = 0.0f;
+
 	if (button == 3) camDist /= 1.07f;
 	if (button == 4) camDist *= 1.07f;
 	if (state == GLUT_UP) buttons = 0;
 
 	mx = (float)x;
 	my = (float)y;
+
+	//updateText();
 }
 
 void motionFunc(int x, int y)
@@ -528,20 +535,23 @@ void keyFunc(unsigned char key, int x, int y)
 		}
 		break;
 	case 'd':
-		if (delta) {
-			delta = false;
-			pxWorld.SetDelta(false);
-			cout << "Delta : " << pxWorld.GetDelta() << endl;
-		}
-		else {
-			delta = true;
-			pxWorld.SetDelta(true);
-			cout << "Delta : " << pxWorld.GetDelta() << endl;
-		}
+		pxWorld.SetDelta();
 		break;
 	case 's':
 		pxWorld.changeNumericalIntegrator();
 		cout << "Numerical Integrator:" << pxWorld.getNumericalIntegrator() << endl;
+		break;
+	case 'o':
+		restlength += 100;
+		break;
+	case 'l':
+		restlength -= 100;
+		break;
+	case 'p':
+		springConstant += 100;
+		break;
+	case 'm':
+		springConstant -= 100;
 		break;
 	default:
 		break;

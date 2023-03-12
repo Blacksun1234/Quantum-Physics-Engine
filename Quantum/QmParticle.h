@@ -16,7 +16,7 @@ namespace Quantum {
 		void integrateExplicit(float);
 		void integrateSemiExplicit(float);
 		void integrateRK4(float);
-		
+
 		glm::vec3 getAcc();
 		glm::vec3 getVel();
 		glm::vec3 getPos();
@@ -31,15 +31,22 @@ namespace Quantum {
 	private:
 		QmUpdater* updater;
 		glm::vec3 position;
-		glm::vec3 velocity;	
+		glm::vec3 velocity;
 		glm::vec3 acceleration;
 		glm::vec3 forceAccumulator;
+
+		/*glm::vec3 position[4];
+		glm::vec3 velocity[4];
+		glm::vec3 acceleration[4];
+		glm::vec3 forceAccumulator[4];*/
 		float invMass;
 
 		float damping;
 		float _charge;
 	};
 
+
+	
 }
 
 #endif
