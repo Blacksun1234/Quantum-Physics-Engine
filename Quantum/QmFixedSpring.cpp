@@ -20,9 +20,9 @@ float Quantum::QmFixedSpring::getSpringConstantFixed() {
 	return _springConstant;
 }
 
-void Quantum::QmFixedSpring::update(QmParticle* p)
+void Quantum::QmFixedSpring::update(QmParticle* p, int i)
 {
-	glm::vec3 d = p->getPos() - *_fixedpos;
+	glm::vec3 d = p->getPos(i) - *_fixedpos;
 	float coeff = -(glm::length(d) - _restLength) * _springConstant;
-	p->addForce(normalize(d) * coeff);
+	p->addForce(normalize(d) * coeff, i);
 }

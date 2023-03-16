@@ -39,18 +39,41 @@ bool QmWorld::GetDelta() {
 	return _delta;
 }
 
+float QmWorld::tickRK4(float t) {
+	clear();// clear of particules to set acc to 0
+
+	applyGravity(0);
+	updateForces(0);
+	integrate(t / 2.0f, 1);
+
+	applyGravity(1);
+	updateForces(1);
+	integrate(t / 2.0f, 2);
+
+	applyGravity(2);
+	updateForces(2);
+	integrate(t, 3);
+
+	applyGravity(3);
+	updateForces(3);
+	integrate_RK4(t);
+
+	_ticktime += t;
+	return _time - _ticktime;
+}
+
 float QmWorld::tick(float t) {
 	clear(); // clear of particules to set acc to 0
-	applyGravity(); //apply gravity to all bodies vector
-	updateForces(); // update forces to each iteration
-	integrate(t);
+	applyGravity(0); //apply gravity to all bodies vector
+	updateForces(0); // update forces to each iteration
+	integrate(t,0);
 	_ticktime += t;
 	return _time - _ticktime;
 }
 
 void QmWorld::interpolate(float dt) {
 	for (QmBody* b : bodies) {
-		((QmParticle*)b)->GetUpdater()->update(((QmParticle*)b)->getPos() + dt * ((QmParticle*)b)->getVel());
+		((QmParticle*)b)->GetUpdater()->update(((QmParticle*)b)->getPos(0) + dt * ((QmParticle*)b)->getVel(0));
 	}
 }
 
@@ -63,46 +86,60 @@ void QmWorld::simulate(float t)
 	dt = _time - _ticktime;
 	if (useDELTA) { // deterministic framerate-independent simulation
 		while (dt >= DELTA) {
-			dt = tick(DELTA);
-			printf("-\n");
+			if (numericalIntegrator == 2) {
+				dt = tickRK4(DELTA);
+			}
+			else {
+				dt = tick(DELTA);
+			}
+			//printf("-\n");
 		}
-		printf("------------\n");
+		//printf("------------\n");
 		interpolate(dt);
 	}
 	else { // old fashioned all-frame non-deterministic simulation
-		tick(t);
+		if (numericalIntegrator == 2) {
+			tickRK4(t);
+		}
+		else {
+			tick(t);
+		}
 		interpolate(0.0f);
 	}
 }
 
-void QmWorld::integrate(float t)
+void QmWorld::integrate(float t, int i)
 {
 	if (numericalIntegrator == 0) {
 		for (QmBody* b : bodies)
-			b->integrateExplicit(t);
+			b->integrateExplicit(t, i);
 	}
 	else if (numericalIntegrator == 1) {
 		for (QmBody* b : bodies)
-			b->integrateSemiExplicit(t);
+			b->integrateSemiExplicit(t, i);
 	}
 	else if (numericalIntegrator == 2) {
 		for (QmBody* b : bodies)
-			b->integrateRK4(t);
+			b->integrateRK4(t, i);
 	}
-	
 }
 
-void QmWorld::applyGravity() {
+void QmWorld::integrate_RK4(float t) {
+	for (QmBody* b : bodies)
+		b->integrate_RK4(t);
+}
+
+void QmWorld::applyGravity(int i) {
 	if (_isGravityActive) {
 		for (QmBody* b : bodies) {
-			b->SetAcc(gravity);
+			b->SetAcc(gravity, i);
 		}	
 	}
 }
 
-void QmWorld::updateForces() {
+void QmWorld::updateForces(int i) {
 	for (QmForceRegistery*  fr: forcesRegistries) {
-		fr->fg->update(fr->p);
+		fr->fg->update(fr->p, i);
 	}
 }
 

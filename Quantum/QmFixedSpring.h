@@ -8,7 +8,7 @@ namespace Quantum {
     {
     public:
         QmFixedSpring(glm::vec3 *_fixedpos, float *restLength, float *springConstant);
-        void update(QmParticle* p);
+        void update(QmParticle* p, int);
         glm::vec3* getFixedPos();
         float getRestLengthFixed();
         float getSpringConstantFixed();

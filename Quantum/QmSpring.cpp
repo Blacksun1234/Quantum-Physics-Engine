@@ -25,10 +25,10 @@ float Quantum::QmSpring::getSpringConstant() {
 float getSpringConstant();
 
 
-void Quantum::QmSpring::update(QmParticle* p)
+void Quantum::QmSpring::update(QmParticle* p, int i)
 {
-	glm::vec3 d = p->getPos() - _otherbody -> getPos();
+	glm::vec3 d = p->getPos(i) - _otherbody -> getPos(i);
 	float coeff = -(glm::length(d) - _restLength) * _springConstant;
-	p->addForce(normalize(d) * coeff);
+	p->addForce(normalize(d) * coeff, i);
 }
 

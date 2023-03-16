@@ -8,8 +8,8 @@ Quantum::QmDrag::QmDrag(float _K1, float _K2) {
 	K2 = _K2;
 }
 
-void Quantum::QmDrag::update(QmParticle* p)
+void Quantum::QmDrag::update(QmParticle* p, int i)
 {
-	float coeff = (- 1.0f) * (K1 * glm::length((p->getVel())) + K2 * glm::length((p->getVel()) * (p->getVel())));
-	p->addForce(glm::normalize(p->getVel()) * coeff);
+	float coeff = (- 1.0f) * (K1 * glm::length((p->getVel(i))) + K2 * glm::length((p->getVel(i)) * (p->getVel(i))));
+	p->addForce(glm::normalize(p->getVel(i)) * coeff, i);
 }

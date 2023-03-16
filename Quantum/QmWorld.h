@@ -17,6 +17,7 @@ namespace Quantum {
 		QmWorld();
 		~QmWorld();
 		void simulate(float);
+		float tickRK4(float);
 		float tick(float);
 		void interpolate(float);
 		void addBody(QmBody*);
@@ -40,9 +41,10 @@ namespace Quantum {
 		float _ticktime;
 		glm::vec3 gravity;
 		bool _isGravityActive;
-		void integrate(float);
-		void applyGravity();
-		void updateForces();
+		void integrate(float, int);
+		void integrate_RK4(float);
+		void applyGravity(int);
+		void updateForces(int);
 		int numericalIntegrator = 0;
 		
 	};

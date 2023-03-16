@@ -9,9 +9,9 @@ Quantum::QmFixedMagnetism::QmFixedMagnetism(float K, float eps, glm::vec3 *fixed
 	_fixedCharge = fixedCharge;
 }
 
-void Quantum::QmFixedMagnetism::update(QmParticle* p)
+void Quantum::QmFixedMagnetism::update(QmParticle* p, int i)
 {
-	glm::vec3 d = p->getPos() - *_fixedPos;
+	glm::vec3 d = p->getPos(i) - *_fixedPos;
 	float coeff = _K * (p->getCharge() * *_fixedCharge);
-	p->addForce(normalize(d) * coeff / float(pow(glm::length(d), 2.0) + _eps));
+	p->addForce(normalize(d) * coeff / float(pow(glm::length(d), 2.0) + _eps), i);
 }

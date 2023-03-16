@@ -198,7 +198,6 @@ void createMagnetismeFromCursorScene2()
 			pxWorld.addForceRegistery(new QmForceRegistery((QmParticle*)b, new QmFixedMagnetism(10.f, 5.0f, mousePointer, &cursormagnetisme)));
 		}
 	}
-
 	if (attract) {
 		cursormagnetisme = 500.f;
 	}
@@ -218,7 +217,7 @@ void initScene2()
 {
 	printf("Scene 2.\n");
 	mousePointer = new glm::vec3(0, 4.5, 0);
-	for (int i = 0; i < 50; i++) {
+	for (int i = 0; i < 30; i++) {
 		createParticlePositive();
 		createParticleNegative();
 	}
@@ -407,14 +406,14 @@ void drawFunc()
 
 			if (dynamic_cast<QmSpring*> (qmFG)) {
 				glBegin(GL_LINES);
-				glVertex3f(qmFR->p->getPos().x, qmFR->p->getPos().y, qmFR->p->getPos().z);
-				glVertex3f(((QmSpring*)qmFG)->getOtherParticle()->getPos().x, ((QmSpring*)qmFG)->getOtherParticle()->getPos().y, ((QmSpring*)qmFG)->getOtherParticle()->getPos().z);
+				glVertex3f(qmFR->p->getPos(0).x, qmFR->p->getPos(0).y, qmFR->p->getPos(0).z);
+				glVertex3f(((QmSpring*)qmFG)->getOtherParticle()->getPos(0).x, ((QmSpring*)qmFG)->getOtherParticle()->getPos(0).y, ((QmSpring*)qmFG)->getOtherParticle()->getPos(0).z);
 				glEnd();
 			}
 
 			else if (dynamic_cast<QmFixedSpring*> (qmFG)) {
 				glBegin(GL_LINES);
-				glVertex3f(qmFR->p->getPos().x, qmFR->p->getPos().y, qmFR->p->getPos().z);
+				glVertex3f(qmFR->p->getPos(0).x, qmFR->p->getPos(0).y, qmFR->p->getPos(0).z);
 				glVertex3f(((QmFixedSpring*)qmFG)->getFixedPos()->x, ((QmFixedSpring*)qmFG)->getFixedPos()->y, ((QmFixedSpring*)qmFG)->getFixedPos()->z);
 				glEnd();
 			}
@@ -553,10 +552,27 @@ void keyFunc(unsigned char key, int x, int y)
 	case 'm':
 		springConstant -= 100;
 		break;
+	case 'k':
+		cout << pxWorld.getForcesRegistery().size() << endl;
+		break;
 	default:
 		break;
 	}
 	updateText();
+}
+
+void reshapePort(int width, int height) {
+	SCREEN_X = width;
+	SCREEN_Y = height;
+	float aspect = SCREEN_X / (double)SCREEN_Y;
+
+	glViewport(0, 0, width, height);
+
+	glMatrixMode(GL_PROJECTION);
+	glLoadIdentity();
+	gluPerspective(45.0, aspect, 0.1, 500.0);
+
+	glutPostRedisplay();
 }
 
 void initGraphics(int argc, char** argv)
@@ -571,6 +587,7 @@ void initGraphics(int argc, char** argv)
 	glutMouseFunc(mouseFunc);
 	glutMotionFunc(motionFunc);
 	glutKeyboardFunc(keyFunc);
+	glutReshapeFunc(reshapePort);
 
 	glClearColor(0.0, 0.0, 0.0, 1.0);
 	glEnable(GL_DEPTH_TEST);
@@ -581,6 +598,7 @@ void initGraphics(int argc, char** argv)
 	glViewport(0, 0, SCREEN_X, SCREEN_Y);
 	createDisplayListSphere();
 	initLight();
+	
 }
 
 // ************************** end GLUT methods

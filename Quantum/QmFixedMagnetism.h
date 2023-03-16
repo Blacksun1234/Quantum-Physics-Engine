@@ -8,7 +8,7 @@ namespace Quantum {
     {
     public:
         QmFixedMagnetism(float _K, float eps, glm::vec3 *fixedpos, float *fixedCharge);
-        void update(QmParticle* p);
+        void update(QmParticle* p, int);
     private:
         float _K;
         float _eps;

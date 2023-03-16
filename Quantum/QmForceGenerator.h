@@ -8,7 +8,7 @@ namespace Quantum {
 	class QmForceGenerator
 	{
 	public:
-		virtual void update(QmParticle* p) {};
+		virtual void update(QmParticle* p, int i) {};
 	};
 }
 

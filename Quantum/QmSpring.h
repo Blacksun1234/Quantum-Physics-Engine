@@ -10,7 +10,7 @@ namespace Quantum {
     {
     public:
         QmSpring(QmParticle*, float *restLength, float *springConstant);
-        void update(QmParticle* p);
+        void update(QmParticle* p, int);
         QmParticle* getOtherParticle();
         float getRestLength();
         float getSpringConstant();

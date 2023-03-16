@@ -7,15 +7,20 @@
 
 using namespace Quantum;
 
-QmParticle::QmParticle() : position(0, 0, 0), velocity(0, 0, 0), acceleration(0, 0, 0)
+QmParticle::QmParticle()
 {
+	_position[0] = glm::vec3(0,0,0);
+	_velocity[0] = glm::vec3(0, 0, 0);
+	_acceleration[0] = glm::vec3(0, 0, 0);
+	_forceAccumulator[0] = glm::vec3(0, 0, 0);
 }
 
 QmParticle::QmParticle(glm::vec3 pos, glm::vec3 vel, glm::vec3 acc, float Mass, float charge) : QmParticle()
 {
-	position = pos;
-	velocity = vel;
-	acceleration = acc;
+	_position[0] = pos;
+	_velocity[0] = vel;
+	_acceleration[0] = acc;
+	_forceAccumulator[0] = glm::vec3(0, 0, 0);
 	invMass = 1 / Mass;
 	//damping = (charge == 0.0f) ? .90f : 1.0f;
 	damping = 0.99f;
@@ -28,59 +33,73 @@ QmParticle::~QmParticle()
 	delete updater;
 }
 
-void QmParticle::integrateExplicit(float t)
+void QmParticle::integrateExplicit(float t, int i)
 {
-	acceleration += forceAccumulator * invMass;
-	position += t * velocity;
-	velocity += t * acceleration;
-	velocity *= damping;
+	_acceleration[i] += _forceAccumulator[i] * invMass;
+	_position[i] += t * _velocity[i];
+	_velocity[i] += t * _acceleration[i];
+	_velocity[i] *= damping;
 	if (updater != NULL) {
-		updater->update(position);
+		updater->update(_position[i]);
 	}
 }
 
-void QmParticle::integrateSemiExplicit(float t)
+void QmParticle::integrateSemiExplicit(float t, int i)
 {
-	acceleration += forceAccumulator * invMass;
-	velocity += t * acceleration;
-	position += t * velocity;
-	velocity *= damping;
+	_acceleration[i] += _forceAccumulator[i] * invMass;
+	_velocity[i] += t * _acceleration[i];
+	_position[i] += t * _velocity[i];
+	_velocity[i] *= damping;
 	if (updater != NULL) {
-		updater->update(position);
+		updater->update(_position[i]);
 	}
 }
 
-void QmParticle::integrateRK4(float t)
+void QmParticle::integrateRK4(float t, int i)
 {
-	
+	_acceleration[i - 1] += _forceAccumulator[i - 1] * invMass;
+	_position[i] = _position[0] + t * _velocity[i - 1];
+	_velocity[i] = _velocity[0] + t * _acceleration[i - 1];
+}
+
+void QmParticle::integrate_RK4(float t) {
+	_acceleration[3] += _forceAccumulator[3] * invMass;
+	_position[0] += t * ((_velocity[0] + 2.0f * _velocity[1] + 2.0f * _velocity[2] + _velocity[3]) / 6.0f);
+	_velocity[0] += t * ((_acceleration[0] + 2.0f * _acceleration[1] + 2.0f * _acceleration[2] + _acceleration[3]) / 6.0f);
+
+	_velocity[0] *= damping;
+
+	if (updater != NULL) {
+		updater->update(_position[0]);
+	}
 }
 
 QmUpdater* QmParticle::GetUpdater() {
 	return updater;
 }
 
-glm::vec3 QmParticle::getAcc()
+glm::vec3 QmParticle::getAcc(int i)
 {
-	return acceleration;
+	return _acceleration[i];
 }
 
-glm::vec3 QmParticle::getVel()
+glm::vec3 QmParticle::getVel(int i)
 {
-	return velocity;
+	return _velocity[i];
 }
 
-glm::vec3 QmParticle::getPos()
+glm::vec3 QmParticle::getPos(int i)
 {
-	return position;
+	return _position[i];
 }
 
 float QmParticle::getCharge() {
 	return _charge;
 }
 
-void Quantum::QmParticle::SetAcc(glm::vec3 acc)
+void Quantum::QmParticle::SetAcc(glm::vec3 acc, int i)
 {
-	acceleration += acc;
+	_acceleration[i] += acc;
 }
 
 void QmParticle::setUpdater(QmUpdater* updater)
@@ -88,13 +107,18 @@ void QmParticle::setUpdater(QmUpdater* updater)
 	this->updater = updater;
 }
 
-void Quantum::QmParticle::addForce(glm::vec3 f)
+void Quantum::QmParticle::addForce(glm::vec3 f, int i)
 {
-	//std::cout << glm::to_string(f) << std::endl;
-	forceAccumulator = forceAccumulator + f;
+	_forceAccumulator[i] = _forceAccumulator[i] + f;
 }
 
 void Quantum::QmParticle::clearParticle() {
-	acceleration = glm::vec3(0,0,0);
-	forceAccumulator = glm::vec3(0,0,0);
+	_acceleration[0] = glm::vec3(0,0,0);
+	_acceleration[1] = glm::vec3(0,0,0);
+	_acceleration[2] = glm::vec3(0,0,0);
+	_acceleration[3] = glm::vec3(0,0,0);
+	_forceAccumulator[0] = glm::vec3(0,0,0);
+	_forceAccumulator[1] = glm::vec3(0,0,0);
+	_forceAccumulator[2] = glm::vec3(0,0,0);
+	_forceAccumulator[3] = glm::vec3(0,0,0);
 }
