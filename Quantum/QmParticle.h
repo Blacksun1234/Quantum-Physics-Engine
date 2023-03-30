@@ -3,15 +3,17 @@
 
 #include <glm/glm.hpp>
 #include "QmBody.h"
+#include "QmAABB.h"
 
 
 namespace Quantum {
 	class QmUpdater;
+	class QmAABB;
 
 	class QmParticle : public QmBody {
 	public:
 		QmParticle();
-		QmParticle(glm::vec3, glm::vec3, glm::vec3, float, float);
+		QmParticle(glm::vec3, glm::vec3, glm::vec3, float, float, float);
 		~QmParticle();
 		void integrateExplicit(float, int);
 		void integrateSemiExplicit(float, int);
@@ -21,13 +23,20 @@ namespace Quantum {
 		glm::vec3 getAcc(int);
 		glm::vec3 getVel(int);
 		glm::vec3 getPos(int);
+		float getRadius();
 		float getCharge();
+		float getMass();
 
 		void SetAcc(glm::vec3 acc, int);
+		void SetPos(glm::vec3 pos, int);
+		void SetVel(glm::vec3 vel, int);
+		void SetPosMove(float pos);
 		QmUpdater* QmParticle::GetUpdater();
 		void setUpdater(QmUpdater* updater);
 		void addForce(glm::vec3, int);
 		void clearParticle();
+
+		QmAABB getAABB();
 
 	private:
 		QmUpdater* updater;
@@ -41,13 +50,13 @@ namespace Quantum {
 		glm::vec3 _acceleration[4];
 		glm::vec3 _forceAccumulator[4];
 		float invMass;
+		float _mass;
 
 		float damping;
 		float _charge;
+
+		float _radius;
+		float restitution;
 	};
-
-
-	
 }
-
 #endif

@@ -4,6 +4,7 @@
 #include "QmUpdater.h"
 #include "glm/ext.hpp"
 #include "glm/gtx/string_cast.hpp"
+#include "QmAABB.h"
 
 using namespace Quantum;
 
@@ -15,17 +16,19 @@ QmParticle::QmParticle()
 	_forceAccumulator[0] = glm::vec3(0, 0, 0);
 }
 
-QmParticle::QmParticle(glm::vec3 pos, glm::vec3 vel, glm::vec3 acc, float Mass, float charge) : QmParticle()
+QmParticle::QmParticle(glm::vec3 pos, glm::vec3 vel, glm::vec3 acc, float Mass, float charge, float radius) : QmParticle()
 {
 	_position[0] = pos;
 	_velocity[0] = vel;
 	_acceleration[0] = acc;
 	_forceAccumulator[0] = glm::vec3(0, 0, 0);
 	invMass = 1 / Mass;
+	_mass = Mass;
 	//damping = (charge == 0.0f) ? .90f : 1.0f;
 	damping = 0.99f;
 	type = TYPE_PARTICLE;
 	_charge = charge;
+	_radius = radius;
 }
 
 QmParticle::~QmParticle()
@@ -93,13 +96,38 @@ glm::vec3 QmParticle::getPos(int i)
 	return _position[i];
 }
 
+float Quantum::QmParticle::getRadius()
+{
+	return _radius;
+}
+
 float QmParticle::getCharge() {
 	return _charge;
+}
+
+float Quantum::QmParticle::getMass()
+{
+	return _mass;
 }
 
 void Quantum::QmParticle::SetAcc(glm::vec3 acc, int i)
 {
 	_acceleration[i] += acc;
+}
+
+void Quantum::QmParticle::SetPos(glm::vec3 pos, int i)
+{
+	_position[i] += pos;
+}
+
+void Quantum::QmParticle::SetVel(glm::vec3 vel, int i)
+{
+	_velocity[i] = vel;
+}
+
+void Quantum::QmParticle::SetPosMove(float pos)
+{
+	_position[0] += pos;
 }
 
 void QmParticle::setUpdater(QmUpdater* updater)
@@ -121,4 +149,9 @@ void Quantum::QmParticle::clearParticle() {
 	_forceAccumulator[1] = glm::vec3(0,0,0);
 	_forceAccumulator[2] = glm::vec3(0,0,0);
 	_forceAccumulator[3] = glm::vec3(0,0,0);
+}
+
+QmAABB Quantum::QmParticle::getAABB()
+{
+	return QmAABB(this);
 }

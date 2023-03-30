@@ -80,7 +80,9 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="QmAABB.h" />
     <ClInclude Include="QmBody.h" />
+    <ClInclude Include="QmContact.h" />
     <ClInclude Include="QmDrag.h" />
     <ClInclude Include="QmFixedMagnetism.h" />
     <ClInclude Include="QmFixedSpring.h" />
@@ -96,7 +98,9 @@
     <ClInclude Include="QmWorld.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="QmAABB.cpp" />
     <ClCompile Include="QmBody.cpp" />
+    <ClCompile Include="QmContact.cpp" />
     <ClCompile Include="QmDrag.cpp" />
     <ClCompile Include="QmFixedMagnetism.cpp" />
     <ClCompile Include="QmFixedSpring.cpp" />

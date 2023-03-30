@@ -72,6 +72,7 @@ void updateText() {
 	std::stringstream ss;
 	ss << "Scene : " << (scene) << std::endl;
 	ss << "Gravity: " << (pxWorld.getGravityIsActive() ? "True" : "False") << std::endl;
+	ss << "Collision: " << (pxWorld.getCollisionIsActive() ? "True" : "False") << std::endl;
 	if(scene == 2)
 		ss << "Magnetism : " << cursormagnetisme << endl;
 	ss << "Numerical Integrator: " << (pxWorld.getNumericalIntegrator()) << std::endl;
@@ -117,7 +118,7 @@ QmParticle* createParticlePositive()
 {
 	glm::vec3 pos = randomVector(-5, 5);
 	GxParticle* g = new GxParticle(glm::vec3(1,0,0), 0.5f , pos);
-	QmParticle* p = new QmParticle(pos, randomVector(0, 0), randomVector(0, 0), 3, 10);
+	QmParticle* p = new QmParticle(pos, randomVector(0, 0), randomVector(0, 0), 3, 10, 0.5f);
 	p->setUpdater(new GxUpdater(g));
 	gxWorld.addParticle(g);
 	pxWorld.addBody(p);
@@ -141,7 +142,7 @@ QmParticle* createParticleNegative()
 {
 	glm::vec3 pos = randomVector(-5, 5);
 	GxParticle* g = new GxParticle(glm::vec3(0, 0, 1), 0.5f, pos);
-	QmParticle* p = new QmParticle(pos, randomVector(0, 0), randomVector(0, 0), 3, -10);
+	QmParticle* p = new QmParticle(pos, randomVector(0, 0), randomVector(0, 0), 3, -10, 0.5f);
 	p->setUpdater(new GxUpdater(g));
 	gxWorld.addParticle(g);
 	pxWorld.addBody(p);
@@ -154,7 +155,6 @@ QmParticle* createParticleNegative()
 			pxWorld.addForceRegistery(f);
 			QmForceRegistery* f2 = new QmForceRegistery((QmParticle*)b, new QmMagnetism(10.f, 5.0f, p));
 			pxWorld.addForceRegistery(f2);
-
 			pxWorld.addForceRegistery(new QmForceRegistery((QmParticle*)b, new QmFixedMagnetism(10.f, 5.0f, mousePointer, &cursormagnetisme)));
 		}
 	}
@@ -165,7 +165,7 @@ QmParticle* createParticleFromCursorScene1()
 {
 	glm::vec3 pos = *mousePointer;
 	GxParticle* g = new GxParticle(randomVector(1, 0), 0.5f, pos);
-	QmParticle* p = new QmParticle(pos, randomVector(1, 10), randomVector(0, 0), 3, 10);
+	QmParticle* p = new QmParticle(pos, randomVector(1, 10), randomVector(0, 0), 3, 10, 0.5f);
 	QmForceRegistery* f = new QmForceRegistery(p, new QmDrag(1,2));
 	p->setUpdater(new GxUpdater(g));
 	gxWorld.addParticle(g);
@@ -178,7 +178,7 @@ QmParticle* createParticleFromCursorScene1()
 QmParticle* createParticleScene3(glm::vec3 pos)
 {
 	GxParticle* g = new GxParticle(randomVector(1, 0), 0.5f, pos);
-	QmParticle* p = new QmParticle(pos, randomVector(1, 10), randomVector(0, 0), 3, 10);
+	QmParticle* p = new QmParticle(pos, randomVector(1, 10), randomVector(0, 0), 3, 10, 0.5f);
 	QmForceRegistery* f = new QmForceRegistery(p, new QmDrag(1, 2));
 	p->setUpdater(new GxUpdater(g));
 	gxWorld.addParticle(g);
@@ -221,7 +221,6 @@ void initScene2()
 		createParticlePositive();
 		createParticleNegative();
 	}
-	
 }
 
 void initScene3() {
@@ -554,6 +553,10 @@ void keyFunc(unsigned char key, int x, int y)
 		break;
 	case 'k':
 		cout << pxWorld.getForcesRegistery().size() << endl;
+		break;
+	case 'c':
+		pxWorld.SetCollision(!pxWorld.getCollisionIsActive());
+		cout << "Collision : " << pxWorld.getCollisionIsActive() << endl;
 		break;
 	default:
 		break;
