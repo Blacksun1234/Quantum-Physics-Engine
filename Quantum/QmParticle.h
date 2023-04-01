@@ -5,7 +5,6 @@
 #include "QmBody.h"
 #include "QmAABB.h"
 
-
 namespace Quantum {
 	class QmUpdater;
 	class QmAABB;

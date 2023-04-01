@@ -16,6 +16,8 @@ QmWorld::QmWorld()
 	_ticktime = 0.f;
 	gravity = glm::vec3(0, -9.81, 0);
 	_delta = false;
+	_isCollisionActive = false;
+	_isBroadPhaseActive = true;
 }
 
 QmWorld::~QmWorld()
@@ -177,63 +179,78 @@ std::vector<QmContact> Quantum::QmWorld::broadphase()
 {
 	//std::cout << "broadphase" << std::endl;
 	std::vector<QmContact> contact;
-	/*for (QmBody* b : bodies) {
-		for (QmBody* b2 : bodies) {
-			if (b2 != b) {
-				if ( intersect(((QmParticle*)b) -> getAABB(), ((QmParticle*)b2) -> getAABB()) ) {
-					contact.push_back(QmContact(b, b2));
-					std::cout << "contact" << std::endl;
+
+	if (_isBroadPhaseActive) {
+		for (int i = 0; i < bodies.size(); i++) {
+			for (int j = i+1; j < bodies.size(); j++) {
+				if (intersect(((QmParticle*)bodies[i])->getAABB(), ((QmParticle*)bodies[j])->getAABB())) {
+					contact.push_back(QmContact(bodies[i], bodies[j]));
 				}
 			}
 		}
-	}*/
-
-	for (int i = 0; i < bodies.size(); i++) {
-		for (int j = i+1; j < bodies.size(); j++) {
-
-			//std::cout << (intersect( ((QmParticle*)bodies[i])->getAABB(), ((QmParticle*)bodies[j])->getAABB()) ? "True" : "False") << std::endl;
-
-			if (intersect(((QmParticle*)bodies[i])->getAABB(), ((QmParticle*)bodies[j])->getAABB())) {
+	}
+	else {
+		for (int i = 0; i < bodies.size(); i++) {
+			for (int j = i + 1; j < bodies.size(); j++) {
 				contact.push_back(QmContact(bodies[i], bodies[j]));
-				//std::cout << "contact" << std::endl;
 			}
 		}
 	}
-
 	//std::cout << "Contact Size :" << contact.size() << std::endl;
 	return contact;
 }
 
 std::vector<QmContact> Quantum::QmWorld::narrowphase(std::vector<QmContact> contact)
 {
+	//optimize the bodies to find which collision it is
+	/*if(p1 p2)
+	else if (p1 hs)*/
+
 	std::vector<QmContact> TrueContact;
 	for (QmContact contact : contact) {
 		float radiusSomme = ((QmParticle*)contact.getBody1())->getRadius() + ((QmParticle*)contact.getBody2())->getRadius();
 		glm::vec3 p1 = ((QmParticle*)contact.getBody1())->getPos(0);
 		glm::vec3 p2 = ((QmParticle*)contact.getBody2())->getPos(0);
+
 		float depth = radiusSomme - glm::length(p2 - p1);
-		if (depth < 0) {
-			TrueContact.push_back(contact);
+		float distance = glm::length(p2 - p1);
+
+		if (depth >= 0) {
 			//print normal and depth
 			contact.setNormal(glm::normalize(p2 - p1));
 			contact.setDepth(depth);
+			//add contact to the list
+			TrueContact.push_back(contact);
 		}
 	}
-	std::cout << "TrueContact Size :" << TrueContact.size() << std::endl;
+	//std::cout << "TrueContact Size :" << TrueContact.size() << std::endl;
 	return TrueContact;
 }
 
 void Quantum::QmWorld::resolve(std::vector<QmContact> TrueContact)
 {
 	for (QmContact TrueContact : TrueContact) {
+
 		//move the particules to the correct position
 		float depth = TrueContact.getDepth();
 		float m1 = ((QmParticle*)TrueContact.getBody1())->getMass();
 		float m2 = ((QmParticle*)TrueContact.getBody2())->getMass();
-		float pos1 = depth * m2 / (m2 + m2);
-		float pos2 = depth * m1 / (m2 + m1);
-		((QmParticle*)TrueContact.getBody1())->SetPosMove(pos1);
-		((QmParticle*)TrueContact.getBody2())->SetPosMove(pos2);
+		glm::vec3 pos1 = (depth * m2 / (m1 + m2)) * TrueContact.getNormal();
+		glm::vec3 pos2 = (depth * m1 / (m1 + m2)) * TrueContact.getNormal();
+
+		/*std::cout << "depth " << depth << std::endl;
+
+		std::cout << "m1 " << m1 << std::endl;
+		std::cout << "m2 " << m2 << std::endl;
+
+		std::cout << "pos1 " << pos1 << std::endl;
+		std::cout << "pos2 " << pos2 << std::endl;*/
+
+		//pos - pos.f
+		//pos + pos.f
+
+		((QmParticle*)TrueContact.getBody1())->SetPos(-pos1, 0);
+		((QmParticle*)TrueContact.getBody2())->SetPos(pos2, 0);
 
 		//compute new velocities
 		//v1|| vel - v1 perpendiculaire
@@ -241,17 +258,31 @@ void Quantum::QmWorld::resolve(std::vector<QmContact> TrueContact)
 		glm::vec3 V1 = ((QmParticle*)TrueContact.getBody1())->getVel(0);
 		glm::vec3 V2 = ((QmParticle*)TrueContact.getBody2())->getVel(0);
 		//(dot pro entre normal collision, velocité(0)) fois la normal collision
+
 		glm::vec3 v1perpendiculaire = (glm::dot(TrueContact.getNormal(),V1))* TrueContact.getNormal();
-		glm::vec3 v2perpendiculaire = (glm::dot(TrueContact.getNormal(), V2)) * TrueContact.getNormal();
+		glm::vec3 v2perpendiculaire = (glm::dot(TrueContact.getNormal(),V2)) * TrueContact.getNormal();
 
-		glm::vec3 v1 = ((m1 - m2) / m1 + m2) * v1perpendiculaire + ((2 * m2) / m1 + m2) * v2perpendiculaire;
-		glm::vec3 v2 = ((2 * m1) / m1 + m2) * v1perpendiculaire + ((m2 - m1) / m1 + m2) * v2perpendiculaire;
+		/*std::cout << "v1perpendiculaire " << v1perpendiculaire.x << " " << v1perpendiculaire.y << " " << v1perpendiculaire.z << " " << std::endl;
+		std::cout << "v2perpendiculaire " << v2perpendiculaire.x << " " << v2perpendiculaire.y << " " << v2perpendiculaire.z << " " << std::endl;*/
 
-		glm::vec3 v1parallele = ((QmParticle*)TrueContact.getBody1())->getVel(0) - v1perpendiculaire;
-		glm::vec3 v2parallele = ((QmParticle*)TrueContact.getBody2())->getVel(0) - v2perpendiculaire;
+		glm::vec3 v1parallele = V1 - v1perpendiculaire;
+		glm::vec3 v2parallele = V2 - v2perpendiculaire;
 
-		((QmParticle*)TrueContact.getBody1())->SetVel((v1 + v1parallele) * 0.99f, 0);
-		((QmParticle*)TrueContact.getBody2())->SetVel((v2 + v2parallele) * 0.99f, 0);
+		glm::vec3 v1 = ((m1 - m2) / (m1 + m2)) * v1perpendiculaire + ((2.0f * m2) / (m1 + m2)) * v2perpendiculaire;
+		glm::vec3 v2 = ((2.0f * m1) / (m1 + m2)) * v1perpendiculaire + ((m2 - m1) / (m1 + m2)) * v2perpendiculaire;
+
+		
+		/*std::cout << "v1parallele " << v1parallele.x << " " << v1parallele.y << " " << v1parallele.z << " " << std::endl;
+		std::cout << "v2parallele " << v2parallele.x << " " << v2parallele.y << " " << v2parallele.z << " " << std::endl;*/
+
+		glm::vec3 vel1 = v1 + v1parallele;
+		glm::vec3 vel2 = v2 + v2parallele;
+
+		/*std::cout << "vel1 " << vel1.x << " " << vel1.y << " " << vel1.z << " " << std::endl;
+		std::cout << "vel2 " << vel2.x << " " << vel2.y << " " << vel2.z << " " << std::endl;*/
+
+		((QmParticle*)TrueContact.getBody1())->SetVel(vel1 * 0.99f, 0);
+		((QmParticle*)TrueContact.getBody2())->SetVel(vel2 * 0.99f, 0);
 	}
 }
 

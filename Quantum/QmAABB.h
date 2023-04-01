@@ -1,8 +1,10 @@
 #pragma once
 #include <glm/glm.hpp>
-#include "QmParticle.h"
+
 
 namespace Quantum {
+	class QmBody;
+
 	class QmAABB
 	{
 	public:

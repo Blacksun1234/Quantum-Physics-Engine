@@ -1,5 +1,6 @@
 #include "stdafx.h"
 #include "QmAABB.h"
+#include "QmParticle.h"
 #include <iostream>
 
 

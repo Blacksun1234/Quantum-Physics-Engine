@@ -73,6 +73,7 @@ void updateText() {
 	ss << "Scene : " << (scene) << std::endl;
 	ss << "Gravity: " << (pxWorld.getGravityIsActive() ? "True" : "False") << std::endl;
 	ss << "Collision: " << (pxWorld.getCollisionIsActive() ? "True" : "False") << std::endl;
+	ss << "BroadPhase: " << (pxWorld.getBroadPhaseIsActive() ? "True" : "False") << std::endl;
 	if(scene == 2)
 		ss << "Magnetism : " << cursormagnetisme << endl;
 	ss << "Numerical Integrator: " << (pxWorld.getNumericalIntegrator()) << std::endl;
@@ -557,6 +558,10 @@ void keyFunc(unsigned char key, int x, int y)
 	case 'c':
 		pxWorld.SetCollision(!pxWorld.getCollisionIsActive());
 		cout << "Collision : " << pxWorld.getCollisionIsActive() << endl;
+		break;
+	case 'b':
+		pxWorld.SetBroadPhase(!pxWorld.getBroadPhaseIsActive());
+		cout << "BroadPhase : " << pxWorld.getBroadPhaseIsActive() << endl;
 		break;
 	default:
 		break;

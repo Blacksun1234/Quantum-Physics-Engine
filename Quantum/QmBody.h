@@ -4,10 +4,14 @@
 
 #include <glm/glm.hpp>
 #include "QmUpdater.h"
+#include "QmAABB.h"
+
+using namespace Quantum;
 
 namespace Quantum {
 
 	const int TYPE_PARTICLE = 0;
+	class QmAABB;
 	
 	class QmBody {
 	public:
@@ -18,7 +22,7 @@ namespace Quantum {
 		virtual void clearParticle() {};
 		int getType() const { return type; }
 		virtual void SetAcc(glm::vec3 acc, int) {};
-
+		virtual QmAABB getAABB() = 0;
 	protected:
 		int type;
 	private:
