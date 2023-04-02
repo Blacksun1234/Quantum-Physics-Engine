@@ -25,11 +25,11 @@ namespace Quantum {
 		float getRadius();
 		float getCharge();
 		float getMass();
+		float getRestitution();
 
 		void SetAcc(glm::vec3 acc, int);
 		void SetPos(glm::vec3 pos, int);
 		void SetVel(glm::vec3 vel, int);
-		void SetPosMove(float pos);
 		QmUpdater* QmParticle::GetUpdater();
 		void setUpdater(QmUpdater* updater);
 		void addForce(glm::vec3, int);
@@ -55,7 +55,7 @@ namespace Quantum {
 		float _charge;
 
 		float _radius;
-		float restitution;
+		float _restitution;
 	};
 }
 #endif

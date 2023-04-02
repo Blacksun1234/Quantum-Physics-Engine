@@ -72,6 +72,16 @@ std::string text = "";
 
 void updateText() {
 	std::stringstream ss;
+	if (scene == 4) {
+		ss << "Number of Bodies: " << pxWorld.bodies.size() - 1 <<endl;
+	}
+	else if (scene == 5) {
+		ss << "Number of Bodies: " << pxWorld.bodies.size() - 6 << endl;
+	}
+	else {
+		ss << "Number of Bodies: " << pxWorld.bodies.size() << endl;
+	}
+	
 	ss << "Scene : " << (scene) << std::endl;
 	ss << "Gravity: " << (pxWorld.getGravityIsActive() ? "True" : "False") << std::endl;
 	ss << "Collision: " << (pxWorld.getCollisionIsActive() ? "True" : "False") << std::endl;
@@ -260,6 +270,13 @@ void initScene1()
 	printf("Scene 1: Random particles.\n");
 	printf("Type space to pause.\n");
 	mousePointer = new glm::vec3(0, 4.5, 0);
+
+	if (pxWorld.getGravityIsActive() == true) {
+		pxWorld.SetGravity(!pxWorld.getGravityIsActive());
+	}
+	if (pxWorld.getCollisionIsActive() == false) {
+		pxWorld.SetCollision(!pxWorld.getCollisionIsActive());
+	}
 }
 
 void initScene2()
@@ -269,6 +286,13 @@ void initScene2()
 	for (int i = 0; i < 30; i++) {
 		createParticlePositive();
 		createParticleNegative();
+	}
+
+	if (pxWorld.getGravityIsActive() == true) {
+		pxWorld.SetGravity(!pxWorld.getGravityIsActive());
+	}
+	if (pxWorld.getCollisionIsActive() == false) {
+		pxWorld.SetCollision(!pxWorld.getCollisionIsActive());
 	}
 }
 
@@ -344,6 +368,12 @@ void initScene3() {
 	pxWorld.addForceRegistery(new QmForceRegistery(p12, new QmSpring(p10, &restlength, &springConstant)));
 	pxWorld.addForceRegistery(new QmForceRegistery(p12, new QmSpring(p11, &restlength, &springConstant)));
 
+	if (pxWorld.getGravityIsActive() == false) {
+		pxWorld.SetGravity(!pxWorld.getGravityIsActive());
+	}
+	if (pxWorld.getCollisionIsActive() == false) {
+		pxWorld.SetCollision(!pxWorld.getCollisionIsActive());
+	}
 }
 
 void initScene4() {
@@ -353,6 +383,13 @@ void initScene4() {
 	createParticleScene4(glm::vec3(3, 0, 0), 1, 0.1);
 	createParticleScene4(glm::vec3(3, 2, 0), 10, 1);
 	createHalfspace(glm::vec3(0, 1, 0), -2);
+
+	if (pxWorld.getGravityIsActive() == false) {
+		pxWorld.SetGravity(!pxWorld.getGravityIsActive());
+	}
+	if (pxWorld.getCollisionIsActive() == false) {
+		pxWorld.SetCollision(!pxWorld.getCollisionIsActive());
+	}
 }
 
 void initScene5() {
@@ -365,6 +402,13 @@ void initScene5() {
 	createHalfspace(glm::vec3(0, -1, 0), -5);
 	createHalfspace(glm::vec3(0, 0, 1), -5);
 	createHalfspace(glm::vec3(0, 0, -1), -5);
+
+	if (pxWorld.getGravityIsActive() == false) {
+		pxWorld.SetGravity(!pxWorld.getGravityIsActive());
+	}
+	if (pxWorld.getCollisionIsActive() == false) {
+		pxWorld.SetCollision(!pxWorld.getCollisionIsActive());
+	}
 }
 
 // ***************************** GLUT methods

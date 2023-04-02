@@ -182,23 +182,6 @@ std::vector<QmContact> Quantum::QmWorld::broadphase()
 {
 	std::vector<QmContact> contact;
 
-	/*if (_isBroadPhaseActive) {
-		for (int i = 0; i < bodies.size(); i++) {
-			for (int j = i + 1; j < bodies.size(); j++) {
-				if (intersect(((QmParticle*)bodies[i])->getAABB(), ((QmParticle*)bodies[j])->getAABB())) {
-					contact.push_back(QmContact(bodies[i], bodies[j]));
-				}
-			}
-		}
-	}
-	else {
-		for (int i = 0; i < bodies.size(); i++) {
-			for (int j = i + 1; j < bodies.size(); j++) {
-				contact.push_back(QmContact(bodies[i], bodies[j]));
-			}
-		}
-	}*/
-
 	if (_isBroadPhaseActive) {
 		for (int i = 0; i < bodies.size(); i++) {
 			for (int j = i+1; j < bodies.size(); j++) {
@@ -252,7 +235,7 @@ void Quantum::QmWorld::resolve(std::vector<QmContact> TrueContact)
 			glm::vec3 v2parallele = V2 - v2perpendiculaire;
 			glm::vec3 v2 = -v2perpendiculaire;
 			glm::vec3 vel2 = v2 + v2parallele;
-			((QmParticle*)TrueContact.getBody2())->SetVel(vel2 * 0.99f, 0);
+			((QmParticle*)TrueContact.getBody2())->SetVel(vel2 * 0.2f, 0);
 
 		}
 		else if (dynamic_cast<QmParticle*> (TrueContact.getBody1()) && dynamic_cast<QmHalfspace*> (TrueContact.getBody2())) {
@@ -264,7 +247,7 @@ void Quantum::QmWorld::resolve(std::vector<QmContact> TrueContact)
 			glm::vec3 v1parallele = V1 - v1perpendiculaire;
 			glm::vec3 v1 = -v1perpendiculaire;
 			glm::vec3 vel1 = v1 + v1parallele;
-			((QmParticle*)TrueContact.getBody1())->SetVel(vel1 * 0.99f, 0);
+			((QmParticle*)TrueContact.getBody1())->SetVel(vel1 * 0.2f, 0);
 		}
 		else if(dynamic_cast<QmParticle*> (TrueContact.getBody1()) && dynamic_cast<QmParticle*> (TrueContact.getBody2())){
 
@@ -294,8 +277,8 @@ void Quantum::QmWorld::resolve(std::vector<QmContact> TrueContact)
 			glm::vec3 vel1 = v1 + v1parallele;
 			glm::vec3 vel2 = v2 + v2parallele;
 
-			((QmParticle*)TrueContact.getBody1())->SetVel(vel1 * 0.99f, 0);
-			((QmParticle*)TrueContact.getBody2())->SetVel(vel2 * 0.99f, 0);
+			((QmParticle*)TrueContact.getBody1())->SetVel(vel1 * ((QmParticle*)TrueContact.getBody1())->getRestitution(), 0);
+			((QmParticle*)TrueContact.getBody2())->SetVel(vel2 * ((QmParticle*)TrueContact.getBody2())->getRestitution(), 0);
 		}
 		
 	}

@@ -29,6 +29,7 @@ QmParticle::QmParticle(glm::vec3 pos, glm::vec3 vel, glm::vec3 acc, float Mass, 
 	type = TYPE_PARTICLE;
 	_charge = charge;
 	_radius = radius;
+	_restitution = 0.99f;
 }
 
 QmParticle::~QmParticle()
@@ -112,6 +113,11 @@ float Quantum::QmParticle::getMass()
 	return _mass;
 }
 
+float Quantum::QmParticle::getRestitution()
+{
+	return _restitution;
+}
+
 void Quantum::QmParticle::SetAcc(glm::vec3 acc, int i)
 {
 	_acceleration[i] += acc;
@@ -125,11 +131,6 @@ void Quantum::QmParticle::SetPos(glm::vec3 pos, int i)
 void Quantum::QmParticle::SetVel(glm::vec3 vel, int i)
 {
 	_velocity[i] = vel;
-}
-
-void Quantum::QmParticle::SetPosMove(float pos)
-{
-	_position[0] += pos;
 }
 
 void QmParticle::setUpdater(QmUpdater* updater)
