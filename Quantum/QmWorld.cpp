@@ -6,6 +6,7 @@
 #include "QmForceRegistery.h"
 #include "QmForceGenerator.h"
 #include "QmAABB.h"
+#include "QmHalfspace.h"
 
 using namespace Quantum;
 
@@ -85,7 +86,9 @@ float QmWorld::tick(float t) {
 
 void QmWorld::interpolate(float dt) {
 	for (QmBody* b : bodies) {
-		((QmParticle*)b)->GetUpdater()->update(((QmParticle*)b)->getPos(0) + dt * ((QmParticle*)b)->getVel(0));
+		if (dynamic_cast<QmParticle*> (b)) {
+			((QmParticle*)b)->GetUpdater()->update(((QmParticle*)b)->getPos(0) + dt * ((QmParticle*)b)->getVel(0));
+		}	
 	}
 }
 
@@ -151,7 +154,7 @@ void QmWorld::integrate_RK4(float t) {
 void QmWorld::applyGravity(int i) {
 	if (_isGravityActive) {
 		for (QmBody* b : bodies) {
-			b->SetAcc(gravity, i);
+			((QmParticle*)b)->SetAcc(gravity * ((QmParticle*)b)->getMass(), i);
 		}	
 	}
 }
@@ -177,12 +180,11 @@ std::vector <QmForceRegistery*> QmWorld::getForcesRegistery() {
 
 std::vector<QmContact> Quantum::QmWorld::broadphase()
 {
-	//std::cout << "broadphase" << std::endl;
 	std::vector<QmContact> contact;
 
-	if (_isBroadPhaseActive) {
+	/*if (_isBroadPhaseActive) {
 		for (int i = 0; i < bodies.size(); i++) {
-			for (int j = i+1; j < bodies.size(); j++) {
+			for (int j = i + 1; j < bodies.size(); j++) {
 				if (intersect(((QmParticle*)bodies[i])->getAABB(), ((QmParticle*)bodies[j])->getAABB())) {
 					contact.push_back(QmContact(bodies[i], bodies[j]));
 				}
@@ -195,8 +197,27 @@ std::vector<QmContact> Quantum::QmWorld::broadphase()
 				contact.push_back(QmContact(bodies[i], bodies[j]));
 			}
 		}
+	}*/
+
+	if (_isBroadPhaseActive) {
+		for (int i = 0; i < bodies.size(); i++) {
+			for (int j = i+1; j < bodies.size(); j++) {
+				if (dynamic_cast<QmHalfspace*> (bodies[i]) || dynamic_cast<QmHalfspace*> (bodies[j])) {
+					contact.push_back(QmContact(bodies[i], bodies[j]));
+				}
+				else if (intersect(((QmParticle*)bodies[i])->getAABB(), ((QmParticle*)bodies[j])->getAABB())) {
+					contact.push_back(QmContact(bodies[i], bodies[j]));
+				}
+			}
+		}
 	}
-	//std::cout << "Contact Size :" << contact.size() << std::endl;
+	else {
+		for (int i = 0; i < bodies.size(); i++) {
+			for (int j = i + 1; j < bodies.size(); j++) {
+				contact.push_back(QmContact(bodies[i], bodies[j]));
+			}
+		}
+	}
 	return contact;
 }
 
@@ -208,17 +229,8 @@ std::vector<QmContact> Quantum::QmWorld::narrowphase(std::vector<QmContact> cont
 
 	std::vector<QmContact> TrueContact;
 	for (QmContact contact : contact) {
-		float radiusSomme = ((QmParticle*)contact.getBody1())->getRadius() + ((QmParticle*)contact.getBody2())->getRadius();
-		glm::vec3 p1 = ((QmParticle*)contact.getBody1())->getPos(0);
-		glm::vec3 p2 = ((QmParticle*)contact.getBody2())->getPos(0);
 
-		float depth = radiusSomme - glm::length(p2 - p1);
-		float distance = glm::length(p2 - p1);
-
-		if (depth >= 0) {
-			//print normal and depth
-			contact.setNormal(glm::normalize(p2 - p1));
-			contact.setDepth(depth);
+		if (contact.getDepth() >= 0) {
 			//add contact to the list
 			TrueContact.push_back(contact);
 		}
@@ -231,58 +243,61 @@ void Quantum::QmWorld::resolve(std::vector<QmContact> TrueContact)
 {
 	for (QmContact TrueContact : TrueContact) {
 
-		//move the particules to the correct position
-		float depth = TrueContact.getDepth();
-		float m1 = ((QmParticle*)TrueContact.getBody1())->getMass();
-		float m2 = ((QmParticle*)TrueContact.getBody2())->getMass();
-		glm::vec3 pos1 = (depth * m2 / (m1 + m2)) * TrueContact.getNormal();
-		glm::vec3 pos2 = (depth * m1 / (m1 + m2)) * TrueContact.getNormal();
+		if (dynamic_cast<QmHalfspace*> (TrueContact.getBody1()) && dynamic_cast<QmParticle*> (TrueContact.getBody2())) {
+			float depth = TrueContact.getDepth();
+			((QmParticle*)TrueContact.getBody2())->SetPos(depth * TrueContact.getNormal(), 0);
 
-		/*std::cout << "depth " << depth << std::endl;
+			glm::vec3 V2 = ((QmParticle*)TrueContact.getBody2())->getVel(0);
+			glm::vec3 v2perpendiculaire = (glm::dot(TrueContact.getNormal(), V2)) * TrueContact.getNormal();
+			glm::vec3 v2parallele = V2 - v2perpendiculaire;
+			glm::vec3 v2 = -v2perpendiculaire;
+			glm::vec3 vel2 = v2 + v2parallele;
+			((QmParticle*)TrueContact.getBody2())->SetVel(vel2 * 0.99f, 0);
 
-		std::cout << "m1 " << m1 << std::endl;
-		std::cout << "m2 " << m2 << std::endl;
+		}
+		else if (dynamic_cast<QmParticle*> (TrueContact.getBody1()) && dynamic_cast<QmHalfspace*> (TrueContact.getBody2())) {
+			float depth = TrueContact.getDepth();
+			((QmParticle*)TrueContact.getBody1())->SetPos(depth * TrueContact.getNormal(), 0);
 
-		std::cout << "pos1 " << pos1 << std::endl;
-		std::cout << "pos2 " << pos2 << std::endl;*/
+			glm::vec3 V1 = ((QmParticle*)TrueContact.getBody1())->getVel(0);
+			glm::vec3 v1perpendiculaire = (glm::dot(TrueContact.getNormal(), V1)) * TrueContact.getNormal();
+			glm::vec3 v1parallele = V1 - v1perpendiculaire;
+			glm::vec3 v1 = -v1perpendiculaire;
+			glm::vec3 vel1 = v1 + v1parallele;
+			((QmParticle*)TrueContact.getBody1())->SetVel(vel1 * 0.99f, 0);
+		}
+		else if(dynamic_cast<QmParticle*> (TrueContact.getBody1()) && dynamic_cast<QmParticle*> (TrueContact.getBody2())){
 
-		//pos - pos.f
-		//pos + pos.f
+			//move the particules to the correct position
+			float depth = TrueContact.getDepth();
+			float m1 = ((QmParticle*)TrueContact.getBody1())->getMass();
+			float m2 = ((QmParticle*)TrueContact.getBody2())->getMass();
+			glm::vec3 pos1 = (depth * m2 / (m1 + m2)) * TrueContact.getNormal();
+			glm::vec3 pos2 = (depth * m1 / (m1 + m2)) * TrueContact.getNormal();
 
-		((QmParticle*)TrueContact.getBody1())->SetPos(-pos1, 0);
-		((QmParticle*)TrueContact.getBody2())->SetPos(pos2, 0);
+			((QmParticle*)TrueContact.getBody1())->SetPos(-pos1, 0);
+			((QmParticle*)TrueContact.getBody2())->SetPos(pos2, 0);
 
-		//compute new velocities
-		//v1|| vel - v1 perpendiculaire
+			glm::vec3 V1 = ((QmParticle*)TrueContact.getBody1())->getVel(0);
+			glm::vec3 V2 = ((QmParticle*)TrueContact.getBody2())->getVel(0);
+			//(dot pro entre normal collision, velocité(0)) fois la normal collision
+
+			glm::vec3 v1perpendiculaire = (glm::dot(TrueContact.getNormal(), V1)) * TrueContact.getNormal();
+			glm::vec3 v2perpendiculaire = (glm::dot(TrueContact.getNormal(), V2)) * TrueContact.getNormal();
+
+			glm::vec3 v1parallele = V1 - v1perpendiculaire;
+			glm::vec3 v2parallele = V2 - v2perpendiculaire;
+
+			glm::vec3 v1 = ((m1 - m2) / (m1 + m2)) * v1perpendiculaire + ((2.0f * m2) / (m1 + m2)) * v2perpendiculaire;
+			glm::vec3 v2 = ((2.0f * m1) / (m1 + m2)) * v1perpendiculaire + ((m2 - m1) / (m1 + m2)) * v2perpendiculaire;
+
+			glm::vec3 vel1 = v1 + v1parallele;
+			glm::vec3 vel2 = v2 + v2parallele;
+
+			((QmParticle*)TrueContact.getBody1())->SetVel(vel1 * 0.99f, 0);
+			((QmParticle*)TrueContact.getBody2())->SetVel(vel2 * 0.99f, 0);
+		}
 		
-		glm::vec3 V1 = ((QmParticle*)TrueContact.getBody1())->getVel(0);
-		glm::vec3 V2 = ((QmParticle*)TrueContact.getBody2())->getVel(0);
-		//(dot pro entre normal collision, velocité(0)) fois la normal collision
-
-		glm::vec3 v1perpendiculaire = (glm::dot(TrueContact.getNormal(),V1))* TrueContact.getNormal();
-		glm::vec3 v2perpendiculaire = (glm::dot(TrueContact.getNormal(),V2)) * TrueContact.getNormal();
-
-		/*std::cout << "v1perpendiculaire " << v1perpendiculaire.x << " " << v1perpendiculaire.y << " " << v1perpendiculaire.z << " " << std::endl;
-		std::cout << "v2perpendiculaire " << v2perpendiculaire.x << " " << v2perpendiculaire.y << " " << v2perpendiculaire.z << " " << std::endl;*/
-
-		glm::vec3 v1parallele = V1 - v1perpendiculaire;
-		glm::vec3 v2parallele = V2 - v2perpendiculaire;
-
-		glm::vec3 v1 = ((m1 - m2) / (m1 + m2)) * v1perpendiculaire + ((2.0f * m2) / (m1 + m2)) * v2perpendiculaire;
-		glm::vec3 v2 = ((2.0f * m1) / (m1 + m2)) * v1perpendiculaire + ((m2 - m1) / (m1 + m2)) * v2perpendiculaire;
-
-		
-		/*std::cout << "v1parallele " << v1parallele.x << " " << v1parallele.y << " " << v1parallele.z << " " << std::endl;
-		std::cout << "v2parallele " << v2parallele.x << " " << v2parallele.y << " " << v2parallele.z << " " << std::endl;*/
-
-		glm::vec3 vel1 = v1 + v1parallele;
-		glm::vec3 vel2 = v2 + v2parallele;
-
-		/*std::cout << "vel1 " << vel1.x << " " << vel1.y << " " << vel1.z << " " << std::endl;
-		std::cout << "vel2 " << vel2.x << " " << vel2.y << " " << vel2.z << " " << std::endl;*/
-
-		((QmParticle*)TrueContact.getBody1())->SetVel(vel1 * 0.99f, 0);
-		((QmParticle*)TrueContact.getBody2())->SetVel(vel2 * 0.99f, 0);
 	}
 }
 

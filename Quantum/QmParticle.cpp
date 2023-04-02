@@ -101,6 +101,8 @@ float Quantum::QmParticle::getRadius()
 	return _radius;
 }
 
+
+
 float QmParticle::getCharge() {
 	return _charge;
 }

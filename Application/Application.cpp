@@ -12,6 +12,7 @@
 #include <string>
 #include <sstream>
 
+#include "glm/gtc/matrix_transform.hpp"
 #include "Quantum.h"
 #include "GxWorld.h"
 #include "GxParticle.h"
@@ -22,6 +23,7 @@
 #include "QmFixedMagnetism.h"
 #include "QmSpring.h"
 #include "QmFixedSpring.h"
+#include "QmHalfspace.h"
 
 using namespace std;
 using namespace Quantum;
@@ -189,6 +191,52 @@ QmParticle* createParticleScene3(glm::vec3 pos)
 	return p;
 }
 
+QmParticle* createParticleScene4(glm::vec3 pos, float mass, float radius)
+{
+	GxParticle* g = new GxParticle(randomVector(1, 0), radius, pos);
+	QmParticle* p = new QmParticle(
+		pos,
+		glm::vec3(0, 0, 0),
+		glm::vec3(0, 0, 0),
+		mass,
+		0.0f,
+		radius
+	);
+
+	p->setUpdater(new GxUpdater(g));
+	gxWorld.addParticle(g);
+	pxWorld.addBody(p);
+
+	return p;
+}
+
+QmParticle* createParticleScene5()
+{
+	float radius = 0.1f + 0.2f * ((rand() % 100) / 100.f);
+	glm::vec3 pos = randomVector(-4, 4);
+	GxParticle* g = new GxParticle(randomVector(1, 0), radius, pos);
+	QmParticle* p = new QmParticle(
+		pos,
+		glm::vec3(0, 0, 0),
+		glm::vec3(0, 0, 0),
+		1 + rand() % 5,
+		0.0f,
+		radius
+	);
+
+	p->setUpdater(new GxUpdater(g));
+	gxWorld.addParticle(g);
+	pxWorld.addBody(p);
+
+	return p;
+}
+
+QmHalfspace* createHalfspace(glm::vec3 normal, float offset) {
+	QmHalfspace* h = new QmHalfspace(normal, offset);
+	pxWorld.addBody(h);
+	return h;
+}
+
 void createMagnetismeFromCursorScene2()
 {
 	glm::vec3 pos = *mousePointer;
@@ -296,6 +344,27 @@ void initScene3() {
 	pxWorld.addForceRegistery(new QmForceRegistery(p12, new QmSpring(p10, &restlength, &springConstant)));
 	pxWorld.addForceRegistery(new QmForceRegistery(p12, new QmSpring(p11, &restlength, &springConstant)));
 
+}
+
+void initScene4() {
+	mousePointer = new glm::vec3(0, 4.5, 0);
+	createParticleScene4(glm::vec3(-3, 0, 0), 10, 1);
+	createParticleScene4(glm::vec3(-3, 2, 0), 1, 0.1);
+	createParticleScene4(glm::vec3(3, 0, 0), 1, 0.1);
+	createParticleScene4(glm::vec3(3, 2, 0), 10, 1);
+	createHalfspace(glm::vec3(0, 1, 0), -2);
+}
+
+void initScene5() {
+	mousePointer = new glm::vec3(0, 0, 0);
+	for (int i = 0; i < 200; i++)
+		createParticleScene5();
+	createHalfspace(glm::vec3(1, 0, 0), -5);
+	createHalfspace(glm::vec3(-1, 0, 0), -5);
+	createHalfspace(glm::vec3(0, 1, 0), -5);
+	createHalfspace(glm::vec3(0, -1, 0), -5);
+	createHalfspace(glm::vec3(0, 0, 1), -5);
+	createHalfspace(glm::vec3(0, 0, -1), -5);
 }
 
 // ***************************** GLUT methods
@@ -419,6 +488,40 @@ void drawFunc()
 			}
 		}
 	}
+
+	for (QmBody* b : pxWorld.getBodies()) {
+		if (dynamic_cast<QmHalfspace*>(b)) {
+			QmHalfspace* h = (QmHalfspace*)b;
+			glm::vec3 n = glm::normalize(h->normal);
+			float o = h->offset;
+			float ox = n.x * o;
+			float oy = n.y * o;
+			float oz = n.z * o;
+
+			glBegin(GL_LINES);
+			glm::vec3 v1(1.0f, 0.0f, 0.0f);
+			if (glm::length(n - v1) < 0.001f || glm::length(n + v1) < 0.001f)
+				v1 = glm::vec3(0.0f, 1.0f, 0.0f);
+
+			glm::vec3 v2 = glm::normalize(glm::cross(n, v1)) * 5.0f;
+			glm::vec3 v3 = glm::normalize(glm::cross(n, v2)) * 5.0f;
+
+			glVertex3f(v2.x + v3.x + ox, v2.y + v3.y + oy, v2.z + v3.z + oz);
+			glVertex3f(-v2.x + v3.x + ox, -v2.y + v3.y + oy, -v2.z + v3.z + oz);
+
+			glVertex3f(-v2.x + v3.x + ox, -v2.y + v3.y + oy, -v2.z + v3.z + oz);
+			glVertex3f(-v2.x - v3.x + ox, -v2.y - v3.y + oy, -v2.z - v3.z + oz);
+
+			glVertex3f(-v2.x - v3.x + ox, -v2.y - v3.y + oy, -v2.z - v3.z + oz);
+			glVertex3f(v2.x - v3.x + ox, v2.y - v3.y + oy, v2.z - v3.z + oz);
+
+			glVertex3f(v2.x - v3.x + ox, v2.y - v3.y + oy, v2.z - v3.z + oz);
+			glVertex3f(v2.x + v3.x + ox, v2.y + v3.y + oy, v2.z + v3.z + oz);
+
+			glEnd();
+		}
+	}
+
 	// save the current projection matrix and set up an orthographic projection
 	glMatrixMode(GL_PROJECTION);
 	glPushMatrix();
@@ -467,9 +570,31 @@ void motionFunc(int x, int y)
 	{
 		camRotate += (x - mx) / 100.f;
 		camHeight += (y - my) * camDist / 1000.f;
+		if (scene == 5) {
+			for (QmBody* b : pxWorld.getBodies()) {
+				if (dynamic_cast<QmParticle*>(b)) {
+					float v = (y - my) * camDist / 1000.0f;
+					((QmParticle*)b)->SetPos(glm::vec3(0.0f, v, 0.0f), 0);
+				}
+			}
+		}
 	}
 	if (buttons == 3)
 	{
+		if (scene == 5) {
+			for (QmBody* b : pxWorld.getBodies()) {
+				if (dynamic_cast<QmHalfspace*>(b)) {
+					float xRotationAngle = glm::radians(x - mx);
+					float yRotationAngle = glm::radians(my - y);
+					glm::mat4 xRotationMatrix = glm::rotate(glm::mat4(1.0f), xRotationAngle, glm::vec3(1.0f, 0.0f, 0.0f));
+					glm::mat4 yRotationMatrix = glm::rotate(glm::mat4(1.0f), yRotationAngle, glm::vec3(0.0f, 1.0f, 0.0f));
+					glm::mat4 transformationMatrix = yRotationMatrix * xRotationMatrix * glm::mat4(1.0f);
+					glm::vec4 vectorInFirstWorldHomogeneous(((QmHalfspace*)b)->normal, 1.0f);
+					glm::vec4 vectorInSecondWorldHomogeneous = transformationMatrix * vectorInFirstWorldHomogeneous;
+					((QmHalfspace*)b)->normal = glm::vec3(vectorInSecondWorldHomogeneous) / vectorInSecondWorldHomogeneous.w;
+				}
+			}
+		}
 		if (mousePointer)
 			*mousePointer += glm::vec3(x - mx, my - y, 0.f) / 15.f;
 	}
@@ -496,6 +621,8 @@ void toggleScene(int s)
 	case 1: initScene1(); break;
 	case 2: initScene2(); break;
 	case 3: initScene3(); break;
+	case 4: initScene4(); break;
+	case 5: initScene5(); break;
 	}
 }
 
@@ -517,6 +644,12 @@ void keyFunc(unsigned char key, int x, int y)
 		break;
 	case '3':
 		toggleScene(3);
+		break;
+	case '4':
+		toggleScene(4);
+		break;
+	case '5':
+		toggleScene(5);
 		break;
 	case ' ':
 		paused = !paused;
