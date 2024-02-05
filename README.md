@@ -29,4 +29,4 @@ The programm is build on 5 scenes:
 ![Physics Engine](https://github.com/Blacksun1234/Quantum-Physics-Engine/assets/42350253/5f78d7a6-652a-4522-bb0c-75731539e2a7)
 
 # Installation
-Simply clone the git and open the solution with Visual Studio 2019 or 2022
+Simply clone the git and open the solution (Quantum.sln) with Visual Studio 2019 or 2022
